@@ -5,8 +5,8 @@ import (
 	"sort"
 	"time"
 
-	"github.com/erneap/authentication/authentication-api/models/config"
-	"github.com/erneap/authentication/authentication-api/models/logs"
+	"github.com/erneap/go-model/config"
+	"github.com/erneap/go-model/logs"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
