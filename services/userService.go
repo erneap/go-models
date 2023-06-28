@@ -3,8 +3,8 @@ package services
 import (
 	"context"
 
-	"github.com/erneap/go-model/config"
-	"github.com/erneap/go-model/users"
+	"github.com/erneap/go-models/config"
+	"github.com/erneap/go-models/users"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )

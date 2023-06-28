@@ -3,7 +3,7 @@ package web
 import (
 	"time"
 
-	"github.com/erneap/go-model/users"
+	"github.com/erneap/go-models/users"
 )
 
 type AuthenticationResponse struct {

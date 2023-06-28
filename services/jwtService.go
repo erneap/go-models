@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erneap/go-model/users"
+	"github.com/erneap/go-models/users"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
 	"go.mongodb.org/mongo-driver/bson/primitive"
