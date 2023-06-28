@@ -3,7 +3,6 @@ module github.com/erneap/go-model
 go 1.20
 
 require (
-	github.com/erneap/authentication/authentication-api v0.0.0-20230628030043-ff6772cc717f
 	github.com/gin-gonic/gin v1.9.1
 	github.com/golang-jwt/jwt v3.2.2+incompatible
 	github.com/joho/godotenv v1.5.1
