@@ -5,6 +5,7 @@ import (
 	"log"
 	"time"
 
+	"github.com/erneap/go-models/converters"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
@@ -31,7 +32,18 @@ func ConnectDB() *mongo.Client {
 	return client
 }
 
+func SetLogLevel() int {
+	answer := 0
+	level := Config("LOGLEVEL")
+	if level != "" {
+		answer = converters.ParseInt(level)
+	}
+	return answer
+}
+
 var DB *mongo.Client = ConnectDB()
+
+var LogLevel int = SetLogLevel()
 
 // get the requested database collection
 func GetCollection(client *mongo.Client, dbName, collectionName string) *mongo.Collection {
