@@ -1,4 +1,4 @@
-package web
+package users
 
 type AuthenticationRequest struct {
 	EmailAddress string `json:"emailAddress"`
@@ -7,9 +7,10 @@ type AuthenticationRequest struct {
 }
 
 type UpdateRequest struct {
-	UserID string `json:"userid"`
-	Field  string `json:"field"`
-	Value  string `json:"value"`
+	UserID     string `json:"userid"`
+	OptionalID string `json:"optional,omitempty"`
+	Field      string `json:"field"`
+	Value      string `json:"value"`
 }
 
 type AddUserRequest struct {

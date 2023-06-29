@@ -21,3 +21,7 @@ func (c ByNofication) Less(i, j int) bool {
 	return c[i].Date.Before(c[j].Date)
 }
 func (c ByNofication) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
+type Message struct {
+	Message string `json:"message"`
+}
