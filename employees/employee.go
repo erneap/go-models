@@ -494,7 +494,7 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		PrimaryCode: code,
 		StartDate:   start,
 		EndDate:     end,
-		Status:      "REQUESTED",
+		Status:      "DRAFT",
 	}
 	zoneID := "UTC"
 	if offset > 0 {
@@ -520,7 +520,7 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 				LeaveDate: sDate,
 				Code:      code,
 				Hours:     hours,
-				Status:    "REQUESTED",
+				Status:    "DRAFT",
 				RequestID: lr.ID,
 			}
 			lr.RequestedDays = append(lr.RequestedDays, lv)
@@ -532,19 +532,24 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 }
 
 func (e *Employee) UpdateLeaveRequest(request, field, value string,
-	offset float64) error {
+	offset float64) (string, error) {
+	message := ""
 	for i, req := range e.Data.Requests {
 		if req.ID == request {
 			switch strings.ToLower(field) {
 			case "startdate", "start":
 				lvDate, err := time.Parse("2006-01-02", value)
 				if err != nil {
-					return err
+					return "", err
 				}
 				if lvDate.Before(req.StartDate) || lvDate.After(req.EndDate) {
-					req.Status = "REQUESTED"
-					req.ApprovedBy = ""
-					req.ApprovalDate = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+					if strings.EqualFold(req.Status, "approved") {
+						req.Status = "REQUESTED"
+						req.ApprovalDate = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+						req.ApprovedBy = ""
+						message = fmt.Sprintf("Leave Request from %s: Starting date changed "+
+							"needs reapproval", e.Name.GetLastFirst())
+					}
 					startPos := -1
 					endPos := -1
 					sort.Sort(ByLeaveDay(e.Data.Leaves))
@@ -579,12 +584,16 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 			case "enddate", "end":
 				lvDate, err := time.Parse("2006-01-02", value)
 				if err != nil {
-					return err
+					return "", err
 				}
 				if lvDate.Before(req.StartDate) || lvDate.After(req.EndDate) {
-					req.Status = "REQUESTED"
-					req.ApprovedBy = ""
-					req.ApprovalDate = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+					if strings.EqualFold(req.Status, "approved") {
+						req.Status = "REQUESTED"
+						req.ApprovalDate = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+						req.ApprovedBy = ""
+						message = fmt.Sprintf("Leave Request from %s: Ending Date changed "+
+							"needs reapproval", e.Name.GetLastFirst())
+					}
 					startPos := -1
 					endPos := -1
 					sort.Sort(ByLeaveDay(e.Data.Leaves))
@@ -611,7 +620,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					}
 				}
 				req.EndDate = lvDate
-				req.Status = "REQUESTED"
 				// reset the leave dates
 				req.SetLeaveDays(e, offset)
 				if req.Status == "APPROVED" {
@@ -624,11 +632,11 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				parts := strings.Split(value, "|")
 				start, err := time.ParseInLocation("2006-01-02", parts[0], time.UTC)
 				if err != nil {
-					return err
+					return "", err
 				}
 				end, err := time.ParseInLocation("2006-01-02", parts[1], time.UTC)
 				if err != nil {
-					return nil
+					return "", nil
 				}
 				start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
 					time.UTC)
@@ -636,9 +644,13 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					time.UTC)
 				if start.Before(req.StartDate) || start.After(req.EndDate) ||
 					end.Before(req.StartDate) || end.After(req.EndDate) {
-					req.Status = "REQUESTED"
-					req.ApprovalDate = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
-					req.ApprovedBy = ""
+					if strings.EqualFold(req.Status, "approved") {
+						req.Status = "REQUESTED"
+						req.ApprovalDate = time.Date(1, 1, 1, 0, 0, 0, 0, time.UTC)
+						req.ApprovedBy = ""
+						message = fmt.Sprintf("Leave Request from %s: dates changed "+
+							"needs reapproval", e.Name.GetLastFirst())
+					}
 					startPos := -1
 					endPos := -1
 					sort.Sort(ByLeaveDay(e.Data.Leaves))
@@ -672,10 +684,15 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				if req.Status == "APPROVED" {
 					e.ChangeApprovedLeaveDates(req)
 				}
+			case "requested":
+				req.Status = "REQUESTED"
+				message = fmt.Sprintf("Leave Request: Leave Request from %s ",
+					e.Name.GetLastFirst()) + "submitted for approval."
 			case "approve":
 				req.ApprovedBy = value
 				req.ApprovalDate = time.Now().UTC()
 				req.Status = "APPROVED"
+				message = "Leave Request: Leave Request approved."
 				e.ChangeApprovedLeaveDates(req)
 			case "day", "requestday":
 				fmt.Println(value)
@@ -711,7 +728,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 			e.Data.Requests[i] = req
 		}
 	}
-	return nil
+	return message, nil
 }
 
 func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
