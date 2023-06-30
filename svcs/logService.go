@@ -167,3 +167,10 @@ func DeleteLogEntriesByApplicationBeforeDate(app string, dt time.Time) error {
 	_, err := logCol.DeleteMany(context.TODO(), filter)
 	return err
 }
+
+// miscellanous functions for log entry work
+func AddLogEntry(app string, lvl logs.DebugLevel, msg string) {
+	if config.LogLevel >= int(lvl) {
+		CreateLogEntry(time.Now().UTC(), app, lvl, msg)
+	}
+}
