@@ -26,4 +26,5 @@ type PasswordResetRequest struct {
 	EmailAddress string `json:"emailAddress"`
 	Password     string `json:"password"`
 	Token        string `json:"token"`
+	Application  string `json:"application:omitempty"`
 }
