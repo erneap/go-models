@@ -21,3 +21,9 @@ type AddUserRequest struct {
 	Password     string `json:"password"`
 	Application  string `json:"application"`
 }
+
+type PasswordResetRequest struct {
+	EmailAddress string `json:"emailAddress"`
+	Password     string `json:"password"`
+	Token        string `json:"token"`
+}
