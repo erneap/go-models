@@ -1,16 +1,9 @@
 package users
 
-import (
-	"time"
-)
-
 type AuthenticationResponse struct {
-	Token       string    `json:"token"`
-	UserID      string    `json:"userid,omitempty"`
-	Name        UserName  `json:"name"`
-	Permissions []string  `json:"permissions,omitempty"`
-	PwdExpires  time.Time `json:"pwdExpires,omitempty"`
-	Exception   string    `json:"exception"`
+	Token     string `json:"token"`
+	User      User   `json:"user,omitempty"`
+	Exception string `json:"exception"`
 }
 
 type UserResponse struct {
