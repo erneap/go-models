@@ -20,6 +20,7 @@ type User struct {
 	MiddleName      string             `json:"middleName,omitempty" bson:"middleName,omitempty"`
 	LastName        string             `json:"lastName" bson:"lastName"`
 	Workgroups      []string           `json:"workgroups" bson:"workgroups"`
+	ResetToken      string             `json:"-" bson:"resettoken,omitempty"`
 }
 
 type ByUser []User
