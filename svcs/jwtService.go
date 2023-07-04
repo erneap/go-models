@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/erneap/go-models/logs"
-	"github.com/erneap/go-models/svcs"
 	"github.com/erneap/go-models/users"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -58,7 +57,7 @@ func CheckJWT(app string) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		tokenString := context.GetHeader("Authorization")
 		if tokenString == "" {
-			svcs.AddLogEntry(app, logs.Minimal,
+			AddLogEntry(app, logs.Minimal,
 				"CheckJWT: No Authentication Token passed")
 			context.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			context.Abort()
@@ -66,7 +65,7 @@ func CheckJWT(app string) gin.HandlerFunc {
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckJWT: Validation Error: "+
+			AddLogEntry(app, logs.Minimal, "CheckJWT: Validation Error: "+
 				err.Error())
 			context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			context.Abort()
@@ -74,7 +73,7 @@ func CheckJWT(app string) gin.HandlerFunc {
 		}
 
 		// replace token by passing a new token in the response header
-		svcs.AddLogEntry(app, logs.Debug, "CheckJWT: Token Verified")
+		AddLogEntry(app, logs.Debug, "CheckJWT: Token Verified")
 		id, _ := primitive.ObjectIDFromHex(claims.UserID)
 		tokenString, _ = CreateToken(id, claims.EmailAddress)
 		context.Writer.Header().Set("Token", tokenString)
@@ -86,7 +85,7 @@ func CheckRole(prog, role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			svcs.AddLogEntry(prog, logs.Minimal,
+			AddLogEntry(prog, logs.Minimal,
 				"CheckRole: No Authentication Token passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
@@ -94,7 +93,7 @@ func CheckRole(prog, role string) gin.HandlerFunc {
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			svcs.AddLogEntry(prog, logs.Minimal, "CheckRole: Validation Error: "+
+			AddLogEntry(prog, logs.Minimal, "CheckRole: Validation Error: "+
 				err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
@@ -102,14 +101,14 @@ func CheckRole(prog, role string) gin.HandlerFunc {
 		}
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
-			svcs.AddLogEntry(prog, logs.Minimal, "CheckRole: User Not Found: "+
+			AddLogEntry(prog, logs.Minimal, "CheckRole: User Not Found: "+
 				err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
 		}
 		if !user.IsInGroup(prog, role) {
-			svcs.AddLogEntry(prog, logs.Minimal, "CheckRole: User Not in Group: "+
+			AddLogEntry(prog, logs.Minimal, "CheckRole: User Not in Group: "+
 				user.LastName)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
@@ -123,7 +122,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			svcs.AddLogEntry(prog, logs.Minimal,
+			AddLogEntry(prog, logs.Minimal,
 				"CheckRoles: No Authentication Token passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
@@ -131,7 +130,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			svcs.AddLogEntry(prog, logs.Minimal, "CheckRoles: Validation Error: "+
+			AddLogEntry(prog, logs.Minimal, "CheckRoles: Validation Error: "+
 				err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
@@ -139,7 +138,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 		}
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
-			svcs.AddLogEntry(prog, logs.Minimal, "CheckRoles: User Not Found: "+
+			AddLogEntry(prog, logs.Minimal, "CheckRoles: User Not Found: "+
 				err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
@@ -152,7 +151,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 			}
 		}
 		if !inRole {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckRoles: User Not In Group: "+
+			AddLogEntry(prog, logs.Minimal, "CheckRoles: User Not In Group: "+
 				user.LastName)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
@@ -166,7 +165,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			svcs.AddLogEntry(app, logs.Minimal,
+			AddLogEntry(app, logs.Minimal,
 				"CheckRoleList: No Authentication Token passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
@@ -174,7 +173,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			svcs.AddLogEntry(app, logs.Minimal,
+			AddLogEntry(app, logs.Minimal,
 				"CheckRoleList: Validation Error: "+err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
@@ -182,7 +181,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 		}
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckRoleList: User Not Found: "+
+			AddLogEntry(app, logs.Minimal, "CheckRoleList: User Not Found: "+
 				err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
@@ -196,7 +195,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 			}
 		}
 		if !inRole {
-			svcs.AddLogEntry(app, logs.Minimal,
+			AddLogEntry(app, logs.Minimal,
 				"CheckRoleList: User not in any of the roles provided: "+user.LastName)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
