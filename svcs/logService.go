@@ -18,6 +18,7 @@ import (
 func CreateLogEntry(dt time.Time, app string, lvl logs.DebugLevel, msg string) error {
 	logCol := config.GetCollection(config.DB, "authenticate", "logs")
 
+	// new log entry
 	entry := &logs.LogEntry{
 		ID:          primitive.NewObjectID(),
 		DateTime:    dt,
