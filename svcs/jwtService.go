@@ -82,11 +82,11 @@ func CheckJWT(app string) gin.HandlerFunc {
 	}
 }
 
-func CheckRole(app, prog, role string) gin.HandlerFunc {
+func CheckRole(prog, role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			svcs.AddLogEntry(app, logs.Minimal,
+			svcs.AddLogEntry(prog, logs.Minimal,
 				"CheckRole: No Authentication Token passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
@@ -94,7 +94,7 @@ func CheckRole(app, prog, role string) gin.HandlerFunc {
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckRole: Validation Error: "+
+			svcs.AddLogEntry(prog, logs.Minimal, "CheckRole: Validation Error: "+
 				err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
@@ -102,14 +102,14 @@ func CheckRole(app, prog, role string) gin.HandlerFunc {
 		}
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckRole: User Not Found: "+
+			svcs.AddLogEntry(prog, logs.Minimal, "CheckRole: User Not Found: "+
 				err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
 		}
 		if !user.IsInGroup(prog, role) {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckRole: User Not in Group: "+
+			svcs.AddLogEntry(prog, logs.Minimal, "CheckRole: User Not in Group: "+
 				user.LastName)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
@@ -119,11 +119,11 @@ func CheckRole(app, prog, role string) gin.HandlerFunc {
 	}
 }
 
-func CheckRoles(app, prog string, roles []string) gin.HandlerFunc {
+func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			svcs.AddLogEntry(app, logs.Minimal,
+			svcs.AddLogEntry(prog, logs.Minimal,
 				"CheckRoles: No Authentication Token passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
@@ -131,7 +131,7 @@ func CheckRoles(app, prog string, roles []string) gin.HandlerFunc {
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckRoles: Validation Error: "+
+			svcs.AddLogEntry(prog, logs.Minimal, "CheckRoles: Validation Error: "+
 				err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
@@ -139,7 +139,7 @@ func CheckRoles(app, prog string, roles []string) gin.HandlerFunc {
 		}
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
-			svcs.AddLogEntry(app, logs.Minimal, "CheckRoles: User Not Found: "+
+			svcs.AddLogEntry(prog, logs.Minimal, "CheckRoles: User Not Found: "+
 				err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
