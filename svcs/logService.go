@@ -19,6 +19,7 @@ func CreateLogEntry(dt time.Time, app string, lvl logs.DebugLevel, msg string) e
 	logCol := config.GetCollection(config.DB, "authenticate", "logs")
 
 	entry := &logs.LogEntry{
+		ID:          primitive.NewObjectID(),
 		DateTime:    dt,
 		Application: app,
 		Level:       lvl,
