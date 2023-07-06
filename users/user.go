@@ -63,7 +63,7 @@ func (u *User) Authenticate(passwd string) error {
 	err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(passwd))
 	if err != nil {
 		u.BadAttempts++
-		return err
+		return errors.New("Email Address/Password mismatch")
 	}
 
 	if u.PasswordExpires.Before(time.Now().UTC()) {
