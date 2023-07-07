@@ -10,7 +10,9 @@ import (
 )
 
 func SendMail(to []string, subject, body string) error {
+	fmt.Println("Send Message")
 	from := config.Config("SMTP_FROM")
+	fmt.Println(from)
 
 	addr := config.Config("SMTP_SERVER") + ":" + config.Config("SMTP_PORT")
 	fmt.Println(addr)
