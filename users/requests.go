@@ -7,7 +7,7 @@ type AuthenticationRequest struct {
 }
 
 type UpdateRequest struct {
-	UserID     string `json:"userid"`
+	ID         string `json:"id"`
 	OptionalID string `json:"optional,omitempty"`
 	Field      string `json:"field"`
 	Value      string `json:"value"`
