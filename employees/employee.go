@@ -502,9 +502,8 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 	} else if offset < 0 {
 		zoneID += fmt.Sprintf("%0.1f", offset)
 	}
-	timeZone := time.FixedZone(zoneID, int(offset*60*60))
 	sDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
-		timeZone)
+		time.UTC)
 	std := e.GetStandardWorkday(sDate)
 	for sDate.Before(end) || sDate.Equal(end) {
 		wd := e.GetWorkday(sDate, offset)
