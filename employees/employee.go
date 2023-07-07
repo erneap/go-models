@@ -3,7 +3,6 @@ package employees
 import (
 	"errors"
 	"fmt"
-	"log"
 	"sort"
 	"strconv"
 	"strings"
@@ -626,7 +625,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				}
 			case "code", "primarycode":
 				req.PrimaryCode = value
-				log.Println(req.PrimaryCode)
 			case "dates":
 				parts := strings.Split(value, "|")
 				start, err := time.ParseInLocation("2006-01-02", parts[0], time.UTC)
@@ -685,25 +683,36 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				}
 			case "requested":
 				req.Status = "REQUESTED"
+				for d, day := range req.RequestedDays {
+					day.Status = "REQUESTED"
+					req.RequestedDays[d] = day
+				}
 				message = fmt.Sprintf("Leave Request: Leave Request from %s ",
 					e.Name.GetLastFirst()) + "submitted for approval."
 			case "approve":
 				req.ApprovedBy = value
 				req.ApprovalDate = time.Now().UTC()
 				req.Status = "APPROVED"
+				for d, day := range req.RequestedDays {
+					day.Status = "APPROVED"
+					req.RequestedDays[d] = day
+				}
 				message = "Leave Request: Leave Request approved."
 				e.ChangeApprovedLeaveDates(req)
 			case "day", "requestday":
-				fmt.Println(value)
 				parts := strings.Split(value, "|")
 				lvDate, _ := time.Parse("2006-01-02", parts[0])
 				code := parts[1]
 				hours, _ := strconv.ParseFloat(parts[2], 64)
 				found := false
+				status := ""
 				for j, lv := range req.RequestedDays {
 					if lv.LeaveDate.Equal(lvDate) {
 						found = true
 						lv.Code = code
+						if status == "" {
+							status = lv.Status
+						}
 						if code == "" {
 							lv.Hours = 0.0
 						} else {
@@ -712,13 +721,12 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						req.RequestedDays[j] = lv
 					}
 				}
-				req.Status = "REQUESTED"
 				if !found {
 					lv := LeaveDay{
 						LeaveDate: lvDate,
 						Code:      code,
 						Hours:     hours,
-						Status:    "REQUESTED",
+						Status:    status,
 						RequestID: req.ID,
 					}
 					req.RequestedDays = append(req.RequestedDays, lv)
