@@ -20,8 +20,8 @@ type Employee struct {
 	Email  string             `json:"email" bson:"email"`
 	Name   EmployeeName       `json:"name" bson:"name"`
 	Data   EmployeeData       `json:"data" bson:"data"`
-	User   *users.User        `json:"user,omitempty" bson:"user,omitempty"`
-	Work   []Work             `json:"work,omitempty"`
+	User   *users.User        `json:"user,omitempty" bson:"-"`
+	Work   []Work             `json:"work,omitempty" bson:"-"`
 }
 
 type ByEmployees []Employee
