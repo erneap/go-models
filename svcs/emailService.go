@@ -2,6 +2,7 @@ package svcs
 
 import (
 	"encoding/base64"
+	"fmt"
 	"net/smtp"
 	"strings"
 
@@ -12,6 +13,7 @@ func SendMail(to []string, subject, body string) error {
 	from := config.Config("SMTP_FROM")
 
 	addr := config.Config("SMTP_SERVER") + ":" + config.Config("SMTP_PORT")
+	fmt.Println(addr)
 
 	r := strings.NewReplacer("\r\n", "", "\r", "", "\n", "", "%0a", "", "%0d", "")
 
