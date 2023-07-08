@@ -21,6 +21,7 @@ type User struct {
 	LastName        string             `json:"lastName" bson:"lastName"`
 	Workgroups      []string           `json:"workgroups" bson:"workgroups"`
 	ResetToken      string             `json:"-" bson:"resettoken,omitempty"`
+	ResetTokenExp   time.Time          `json:"-" bson:"resettokenexp,omitempty"`
 }
 
 type ByUser []User
