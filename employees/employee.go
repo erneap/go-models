@@ -13,15 +13,22 @@ import (
 )
 
 type Employee struct {
-	ID     primitive.ObjectID `json:"id" bson:"_id"`
-	TeamID primitive.ObjectID `json:"team" bson:"team"`
-	SiteID string             `json:"site" bson:"site"`
-	UserID primitive.ObjectID `json:"userid" bson:"userid"`
-	Email  string             `json:"email" bson:"email"`
-	Name   EmployeeName       `json:"name" bson:"name"`
-	Data   EmployeeData       `json:"data" bson:"data"`
-	User   *users.User        `json:"user,omitempty" bson:"-"`
-	Work   []Work             `json:"work,omitempty" bson:"-"`
+	ID          primitive.ObjectID  `json:"id" bson:"_id"`
+	TeamID      primitive.ObjectID  `json:"team" bson:"team"`
+	SiteID      string              `json:"site" bson:"site"`
+	UserID      primitive.ObjectID  `json:"userid" bson:"userid"`
+	Email       string              `json:"email" bson:"email"`
+	Name        EmployeeName        `json:"name" bson:"name"`
+	Data        *EmployeeData       `json:"data,omitempty" bson:"data,omitempty"`
+	CompanyInfo CompanyInfo         `json:"companyinfo"`
+	Assignments []Assignment        `json:"assignments,omitempty"`
+	Variations  []Variation         `json:"variations,omitempty"`
+	Balances    []AnnualLeave       `json:"balance,omitempty"`
+	Leaves      []LeaveDay          `json:"leaves,omitempty"`
+	Requests    []LeaveRequest      `json:"requests,omitempty"`
+	LaborCodes  []EmployeeLaborCode `json:"laborCodes,omitempty"`
+	User        *users.User         `json:"user,omitempty" bson:"-"`
+	Work        []Work              `json:"work,omitempty" bson:"-"`
 }
 
 type ByEmployees []Employee
@@ -39,10 +46,13 @@ func (c ByEmployees) Less(i, j int) bool {
 func (c ByEmployees) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
 func (e *Employee) RemoveLeaves(start, end time.Time) {
-	sort.Sort(ByLeaveDay(e.Data.Leaves))
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
+	sort.Sort(ByLeaveDay(e.Leaves))
 	startpos := -1
 	endpos := -1
-	for i, lv := range e.Data.Leaves {
+	for i, lv := range e.Leaves {
 		if startpos < 0 && (lv.LeaveDate.Equal(start) || lv.LeaveDate.After(start)) &&
 			(lv.LeaveDate.Equal(end) || lv.LeaveDate.Before(end)) {
 			startpos = i
@@ -55,8 +65,32 @@ func (e *Employee) RemoveLeaves(start, end time.Time) {
 		if endpos < 0 {
 			endpos = startpos
 		}
-		e.Data.Leaves = append(e.Data.Leaves[:startpos], e.Data.Leaves[endpos+1:]...)
+		e.Leaves = append(e.Leaves[:startpos], e.Leaves[endpos+1:]...)
 	}
+}
+
+func (e *Employee) ConvertFromData() error {
+	if e.Data != nil {
+		e.CompanyInfo = e.Data.CompanyInfo
+		e.Leaves = e.Data.Leaves
+		e.Leaves = e.Data.Leaves[:0]
+		e.Assignments = e.Data.Assignments
+		e.Variations = e.Data.Variations
+		e.Balances = e.Data.Balances
+		e.Requests = e.Data.Requests
+		for _, lc := range e.Data.LaborCodes {
+			for a, asgmt := range e.Assignments {
+				newLc := &EmployeeLaborCode{
+					ChargeNumber: lc.ChargeNumber,
+					Extension:    lc.Extension,
+				}
+				asgmt.LaborCodes = append(asgmt.LaborCodes, *newLc)
+				e.Assignments[a] = asgmt
+			}
+		}
+		//e.Data = nil
+	}
+	return nil
 }
 
 type EmployeeName struct {
@@ -84,8 +118,11 @@ type EmployeeData struct {
 }
 
 func (e *Employee) IsActive(date time.Time) bool {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	answer := false
-	for _, asgmt := range e.Data.Assignments {
+	for _, asgmt := range e.Assignments {
 		if asgmt.UseAssignment(e.SiteID, date) {
 			answer = true
 		}
@@ -94,6 +131,9 @@ func (e *Employee) IsActive(date time.Time) bool {
 }
 
 func (e *Employee) IsAssigned(site, workcenter string, start, end time.Time) bool {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	answer := false
 	for _, asgmt := range e.Data.Assignments {
 		if strings.EqualFold(asgmt.Site, site) &&
@@ -106,6 +146,9 @@ func (e *Employee) IsAssigned(site, workcenter string, start, end time.Time) boo
 }
 
 func (e *Employee) AtSite(site string, start, end time.Time) bool {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	answer := false
 	for _, asgmt := range e.Data.Assignments {
 		if strings.EqualFold(asgmt.Site, site) &&
@@ -117,23 +160,26 @@ func (e *Employee) AtSite(site string, start, end time.Time) bool {
 }
 
 func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	var wkday *Workday = nil
 	var siteid string = ""
-	for _, asgmt := range e.Data.Assignments {
+	for _, asgmt := range e.Assignments {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
 			siteid = asgmt.Site
 			wkday = asgmt.GetWorkday(date, offset)
 		}
 	}
-	for _, vari := range e.Data.Variations {
+	for _, vari := range e.Variations {
 		if (vari.StartDate.Before(date) || vari.StartDate.Equal(date)) &&
 			(vari.EndDate.After(date) || vari.EndDate.Equal(date)) {
 			wkday = vari.GetWorkday(siteid, date)
 		}
 	}
 	bLeave := false
-	for _, lv := range e.Data.Leaves {
+	for _, lv := range e.Leaves {
 		if lv.LeaveDate.Equal(date) {
 			if !bLeave {
 				wkday = &Workday{
@@ -157,23 +203,26 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 }
 
 func (e *Employee) GetWorkdayActual(date time.Time, offset float64) *Workday {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	var wkday *Workday = nil
 	var siteid string = ""
-	for _, asgmt := range e.Data.Assignments {
+	for _, asgmt := range e.Assignments {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
 			siteid = asgmt.Site
 			wkday = asgmt.GetWorkday(date, offset)
 		}
 	}
-	for _, vari := range e.Data.Variations {
+	for _, vari := range e.Variations {
 		if (vari.StartDate.Before(date) || vari.StartDate.Equal(date)) &&
 			(vari.EndDate.After(date) || vari.EndDate.Equal(date)) {
 			wkday = vari.GetWorkday(siteid, date)
 		}
 	}
 	bLeave := false
-	for _, lv := range e.Data.Leaves {
+	for _, lv := range e.Leaves {
 		if lv.LeaveDate.Equal(date) &&
 			strings.EqualFold(lv.Status, "actual") {
 			if !bLeave {
@@ -198,16 +247,19 @@ func (e *Employee) GetWorkdayActual(date time.Time, offset float64) *Workday {
 }
 
 func (e *Employee) GetWorkdayWOLeave(date time.Time, offset float64) *Workday {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	var wkday *Workday = nil
 	var siteid string = ""
-	for _, asgmt := range e.Data.Assignments {
+	for _, asgmt := range e.Assignments {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
 			siteid = asgmt.Site
 			wkday = asgmt.GetWorkday(date, offset)
 		}
 	}
-	for _, vari := range e.Data.Variations {
+	for _, vari := range e.Variations {
 		if (vari.StartDate.Before(date) || vari.StartDate.Equal(date)) &&
 			(vari.EndDate.After(date) || vari.EndDate.Equal(date)) {
 			wkday = vari.GetWorkday(siteid, date)
@@ -217,6 +269,9 @@ func (e *Employee) GetWorkdayWOLeave(date time.Time, offset float64) *Workday {
 }
 
 func (e *Employee) GetStandardWorkday(date time.Time) float64 {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	answer := 8.0
 	count := 0
 	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0,
@@ -242,9 +297,12 @@ func (e *Employee) GetStandardWorkday(date time.Time) float64 {
 }
 
 func (e *Employee) AddAssignment(site, wkctr string, start time.Time) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	// get next assignment id as one plus the highest in employee data
 	max := 0
-	for _, asgmt := range e.Data.Assignments {
+	for _, asgmt := range e.Assignments {
 		if int(asgmt.ID) > max {
 			max = int(asgmt.ID)
 		}
@@ -252,11 +310,11 @@ func (e *Employee) AddAssignment(site, wkctr string, start time.Time) {
 
 	// set the current highest or last end date to one day before
 	// this assignment start date
-	sort.Sort(ByAssignment(e.Data.Assignments))
-	if len(e.Data.Assignments) > 0 {
-		lastAsgmt := e.Data.Assignments[len(e.Data.Assignments)-1]
+	sort.Sort(ByAssignment(e.Assignments))
+	if len(e.Assignments) > 0 {
+		lastAsgmt := e.Assignments[len(e.Assignments)-1]
 		lastAsgmt.EndDate = start.AddDate(0, 0, -1)
-		e.Data.Assignments[len(e.Data.Assignments)-1] = lastAsgmt
+		e.Assignments[len(e.Assignments)-1] = lastAsgmt
 	}
 
 	// create the new assignment
@@ -282,53 +340,62 @@ func (e *Employee) AddAssignment(site, wkctr string, start time.Time) {
 	}
 
 	// add it employees assignment list and sort them
-	e.Data.Assignments = append(e.Data.Assignments, newAsgmt)
-	sort.Sort(ByAssignment(e.Data.Assignments))
+	e.Assignments = append(e.Assignments, newAsgmt)
+	sort.Sort(ByAssignment(e.Assignments))
 }
 
 func (e *Employee) RemoveAssignment(id uint) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	pos := -1
 	if id > 1 {
-		sort.Sort(ByAssignment(e.Data.Assignments))
-		for i, asgmt := range e.Data.Assignments {
+		sort.Sort(ByAssignment(e.Assignments))
+		for i, asgmt := range e.Assignments {
 			if asgmt.ID == id {
 				pos = i
 			}
 		}
 		if pos >= 0 {
-			asgmt := e.Data.Assignments[pos-1]
+			asgmt := e.Assignments[pos-1]
 			asgmt.EndDate = time.Date(9999, 12, 30, 0, 0, 0, 0, time.UTC)
-			e.Data.Assignments[pos-1] = asgmt
-			e.Data.Assignments = append(e.Data.Assignments[:pos],
-				e.Data.Assignments[pos+1:]...)
+			e.Assignments[pos-1] = asgmt
+			e.Assignments = append(e.Assignments[:pos],
+				e.Assignments[pos+1:]...)
 		}
 	}
 }
 
 func (e *Employee) PurgeOldData(date time.Time) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	// purge old assignments based on assignment end date
-	sort.Sort(ByAssignment(e.Data.Assignments))
-	for i := len(e.Data.Assignments) - 1; i >= 0; i-- {
-		if e.Data.Assignments[i].EndDate.Before(date) {
-			e.Data.Assignments = append(e.Data.Assignments[:i],
-				e.Data.Assignments[i+1:]...)
+	sort.Sort(ByAssignment(e.Assignments))
+	for i := len(e.Assignments) - 1; i >= 0; i-- {
+		if e.Assignments[i].EndDate.Before(date) {
+			e.Assignments = append(e.Assignments[:i],
+				e.Assignments[i+1:]...)
 		}
 	}
 	// purge old variations based on variation end date
-	sort.Sort(ByVariation(e.Data.Variations))
-	for i := len(e.Data.Variations) - 1; i >= 0; i-- {
-		if e.Data.Variations[i].EndDate.Before(date) {
-			e.Data.Variations = append(e.Data.Variations[:i],
-				e.Data.Variations[i+1:]...)
+	sort.Sort(ByVariation(e.Variations))
+	for i := len(e.Variations) - 1; i >= 0; i-- {
+		if e.Variations[i].EndDate.Before(date) {
+			e.Variations = append(e.Variations[:i],
+				e.Variations[i+1:]...)
 		}
 	}
 }
 
 func (e *Employee) CreateLeaveBalance(year int) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	found := false
 	lastAnnual := 0.0
 	lastCarry := 0.0
-	for _, al := range e.Data.Balances {
+	for _, al := range e.Balances {
 		if al.Year == year {
 			found = true
 		}
@@ -347,7 +414,7 @@ func (e *Employee) CreateLeaveBalance(year int) {
 			al.Annual = 120.0
 		} else {
 			carry := lastAnnual + lastCarry
-			for _, lv := range e.Data.Leaves {
+			for _, lv := range e.Leaves {
 				if lv.LeaveDate.Year() == year-1 && strings.ToLower(lv.Code) == "v" &&
 					strings.ToLower(lv.Status) == "actual" {
 					carry -= lv.Hours
@@ -355,13 +422,16 @@ func (e *Employee) CreateLeaveBalance(year int) {
 			}
 			al.Carryover = carry
 		}
-		e.Data.Balances = append(e.Data.Balances, al)
+		e.Balances = append(e.Balances, al)
 	}
 }
 
 func (e *Employee) UpdateAnnualLeave(year int, annual, carry float64) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	found := false
-	for _, al := range e.Data.Balances {
+	for _, al := range e.Balances {
 		if al.Year == year {
 			found = true
 			al.Annual = annual
@@ -374,16 +444,19 @@ func (e *Employee) UpdateAnnualLeave(year int, annual, carry float64) {
 			Annual:    annual,
 			Carryover: carry,
 		}
-		e.Data.Balances = append(e.Data.Balances, al)
-		sort.Sort(ByBalance(e.Data.Balances))
+		e.Balances = append(e.Balances, al)
+		sort.Sort(ByBalance(e.Balances))
 	}
 }
 
 func (e *Employee) AddLeave(id int, date time.Time, code, status string,
 	hours float64, requestID *primitive.ObjectID) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	found := false
 	max := 0
-	for _, lv := range e.Data.Leaves {
+	for _, lv := range e.Leaves {
 		if (lv.LeaveDate.Equal(date) &&
 			strings.EqualFold(lv.Code, code)) || lv.ID == id {
 			found = true
@@ -405,15 +478,18 @@ func (e *Employee) AddLeave(id int, date time.Time, code, status string,
 			Status:    status,
 			RequestID: requestID.Hex(),
 		}
-		e.Data.Leaves = append(e.Data.Leaves, lv)
-		sort.Sort(ByLeaveDay(e.Data.Leaves))
+		e.Leaves = append(e.Leaves, lv)
+		sort.Sort(ByLeaveDay(e.Leaves))
 	}
 }
 
 func (e *Employee) UpdateLeave(id int, field, value string) error {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	found := false
-	for i := 0; i < len(e.Data.Leaves) && !found; i++ {
-		lv := e.Data.Leaves[i]
+	for i := 0; i < len(e.Leaves) && !found; i++ {
+		lv := e.Leaves[i]
 		if lv.ID == id {
 			switch strings.ToLower(field) {
 			case "date":
@@ -435,29 +511,35 @@ func (e *Employee) UpdateLeave(id int, field, value string) error {
 			case "requestid":
 				lv.RequestID = value
 			}
-			e.Data.Leaves[i] = lv
+			e.Leaves[i] = lv
 		}
 	}
 	return nil
 }
 
 func (e *Employee) DeleteLeave(id int) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	pos := -1
-	for i, lv := range e.Data.Leaves {
+	for i, lv := range e.Leaves {
 		if lv.ID == id {
 			pos = i
 		}
 	}
 	if pos >= 0 {
-		e.Data.Leaves = append(e.Data.Leaves[:pos], e.Data.Leaves[pos+1:]...)
+		e.Leaves = append(e.Leaves[:pos], e.Leaves[pos+1:]...)
 	}
 }
 
 func (e *Employee) GetLeaveHours(start, end time.Time) float64 {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	answer := 0.0
 
-	sort.Sort(ByLeaveDay(e.Data.Leaves))
-	for _, lv := range e.Data.Leaves {
+	sort.Sort(ByLeaveDay(e.Leaves))
+	for _, lv := range e.Leaves {
 		if (lv.LeaveDate.After(start) ||
 			lv.LeaveDate.Equal(start)) &&
 			lv.LeaveDate.Before(end) &&
@@ -469,10 +551,13 @@ func (e *Employee) GetLeaveHours(start, end time.Time) float64 {
 }
 
 func (e *Employee) GetPTOHours(start, end time.Time) float64 {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	answer := 0.0
 
-	sort.Sort(ByLeaveDay(e.Data.Leaves))
-	for _, lv := range e.Data.Leaves {
+	sort.Sort(ByLeaveDay(e.Leaves))
+	for _, lv := range e.Leaves {
 		if (lv.LeaveDate.After(start) ||
 			lv.LeaveDate.Equal(start)) &&
 			lv.LeaveDate.Before(end) &&
@@ -486,6 +571,9 @@ func (e *Employee) GetPTOHours(start, end time.Time) float64 {
 
 func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 	offset float64) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	lr := LeaveRequest{
 		ID:          primitive.NewObjectID().Hex(),
 		EmployeeID:  empID,
@@ -525,14 +613,17 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		}
 		sDate = sDate.AddDate(0, 0, 1)
 	}
-	e.Data.Requests = append(e.Data.Requests, lr)
-	sort.Sort(ByLeaveRequest(e.Data.Requests))
+	e.Requests = append(e.Requests, lr)
+	sort.Sort(ByLeaveRequest(e.Requests))
 }
 
 func (e *Employee) UpdateLeaveRequest(request, field, value string,
 	offset float64) (string, error) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	message := ""
-	for i, req := range e.Data.Requests {
+	for i, req := range e.Requests {
 		if req.ID == request {
 			switch strings.ToLower(field) {
 			case "startdate", "start":
@@ -550,8 +641,8 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					}
 					startPos := -1
 					endPos := -1
-					sort.Sort(ByLeaveDay(e.Data.Leaves))
-					for i, lv := range e.Data.Leaves {
+					sort.Sort(ByLeaveDay(e.Leaves))
+					for i, lv := range e.Leaves {
 						if lv.RequestID == req.ID {
 							if startPos < 0 {
 								startPos = i
@@ -565,11 +656,11 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 							endPos = startPos
 						}
 						endPos++
-						if endPos > len(e.Data.Leaves) {
+						if endPos > len(e.Leaves) {
 
 						} else {
-							e.Data.Leaves = append(e.Data.Leaves[:startPos],
-								e.Data.Leaves[endPos:]...)
+							e.Leaves = append(e.Leaves[:startPos],
+								e.Leaves[endPos:]...)
 						}
 					}
 				}
@@ -594,8 +685,8 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					}
 					startPos := -1
 					endPos := -1
-					sort.Sort(ByLeaveDay(e.Data.Leaves))
-					for i, lv := range e.Data.Leaves {
+					sort.Sort(ByLeaveDay(e.Leaves))
+					for i, lv := range e.Leaves {
 						if lv.RequestID == req.ID {
 							if startPos < 0 {
 								startPos = i
@@ -609,11 +700,11 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 							endPos = startPos
 						}
 						endPos++
-						if endPos > len(e.Data.Leaves) {
+						if endPos > len(e.Leaves) {
 
 						} else {
-							e.Data.Leaves = append(e.Data.Leaves[:startPos],
-								e.Data.Leaves[endPos:]...)
+							e.Leaves = append(e.Leaves[:startPos],
+								e.Leaves[endPos:]...)
 						}
 					}
 				}
@@ -650,8 +741,8 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					}
 					startPos := -1
 					endPos := -1
-					sort.Sort(ByLeaveDay(e.Data.Leaves))
-					for i, lv := range e.Data.Leaves {
+					sort.Sort(ByLeaveDay(e.Leaves))
+					for i, lv := range e.Leaves {
 						if lv.RequestID == req.ID {
 							if startPos < 0 {
 								startPos = i
@@ -665,11 +756,11 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 							endPos = startPos
 						}
 						endPos++
-						if endPos > len(e.Data.Leaves) {
+						if endPos > len(e.Leaves) {
 
 						} else {
-							e.Data.Leaves = append(e.Data.Leaves[:startPos],
-								e.Data.Leaves[endPos:]...)
+							e.Leaves = append(e.Leaves[:startPos],
+								e.Leaves[endPos:]...)
 						}
 					}
 				}
@@ -732,20 +823,23 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					req.RequestedDays = append(req.RequestedDays, lv)
 				}
 			}
-			e.Data.Requests[i] = req
+			e.Requests[i] = req
 		}
 	}
 	return message, nil
 }
 
 func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	// approved leave affects the leave listing, so we will
 	// remove old leaves for the period then add the new ones
 	startPos := -1
 	endPos := -1
 	maxId := -1
-	sort.Sort(ByLeaveDay(e.Data.Leaves))
-	for i, lv := range e.Data.Leaves {
+	sort.Sort(ByLeaveDay(e.Leaves))
+	for i, lv := range e.Leaves {
 		if (lv.LeaveDate.After(lr.StartDate) || lv.LeaveDate.Equal(lr.StartDate)) &&
 			(lv.LeaveDate.Before(lr.EndDate) || lv.LeaveDate.Equal(lr.EndDate)) {
 			if startPos < 0 {
@@ -763,7 +857,7 @@ func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
 			endPos = startPos
 		}
 		endPos++
-		e.Data.Leaves = append(e.Data.Leaves[:startPos], e.Data.Leaves[endPos:]...)
+		e.Leaves = append(e.Leaves[:startPos], e.Leaves[endPos:]...)
 	}
 
 	// now add the leave request's leave days to the leave list
@@ -771,14 +865,17 @@ func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
 		maxId++
 		lv.ID = maxId
 		lv.Status = lr.Status
-		e.Data.Leaves = append(e.Data.Leaves, lv)
+		e.Leaves = append(e.Leaves, lv)
 	}
-	sort.Sort(ByLeaveDay(e.Data.Leaves))
+	sort.Sort(ByLeaveDay(e.Leaves))
 }
 
 func (e *Employee) DeleteLeaveRequest(request string) error {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	pos := -1
-	for i, req := range e.Data.Requests {
+	for i, req := range e.Requests {
 		if req.ID == request {
 			pos = i
 		}
@@ -786,67 +883,71 @@ func (e *Employee) DeleteLeaveRequest(request string) error {
 	if pos < 0 {
 		return errors.New("request not found")
 	}
-	e.Data.Requests = append(e.Data.Requests[:pos], e.Data.Requests[pos+1:]...)
+	e.Requests = append(e.Requests[:pos], e.Requests[pos+1:]...)
 	// delete all leaves associated with this leave request, except if the leave
 	// has a status of actual
-	sort.Sort(ByLeaveDay(e.Data.Leaves))
+	sort.Sort(ByLeaveDay(e.Leaves))
 	var deletes []int
-	for i, lv := range e.Data.Leaves {
+	for i, lv := range e.Leaves {
 		if lv.RequestID == request && strings.ToLower(lv.Status) != "actual" {
 			deletes = append(deletes, i)
 		}
 	}
 	if len(deletes) > 0 {
 		for i := len(deletes) - 1; i >= 0; i-- {
-			e.Data.Leaves = append(e.Data.Leaves[:deletes[i]],
-				e.Data.Leaves[deletes[i]+1:]...)
+			e.Leaves = append(e.Leaves[:deletes[i]],
+				e.Leaves[deletes[i]+1:]...)
 		}
 	}
 	return nil
 }
 
 func (e *Employee) HasLaborCode(chargeNumber, extension string) bool {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	found := false
-	for _, lc := range e.Data.LaborCodes {
-		if lc.ChargeNumber == chargeNumber && lc.Extension == extension {
-			found = true
+	for _, asgmt := range e.Assignments {
+		for _, lc := range asgmt.LaborCodes {
+			if strings.EqualFold(lc.ChargeNumber, chargeNumber) &&
+				strings.EqualFold(lc.Extension, extension) {
+				found = true
+			}
 		}
 	}
 	return found
 }
 
-func (e *Employee) AddLaborCode(chargeNo, ext string) {
-	if !e.HasLaborCode(chargeNo, ext) {
-		lc := EmployeeLaborCode{
-			ChargeNumber: chargeNo,
-			Extension:    ext,
-		}
-		e.Data.LaborCodes = append(e.Data.LaborCodes, lc)
-	}
-}
-
 func (e *Employee) DeleteLaborCode(chargeNo, ext string) {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	if e.HasLaborCode(chargeNo, ext) {
-		pos := -1
-		for i, lc := range e.Data.LaborCodes {
-			if lc.ChargeNumber == chargeNo && lc.Extension == ext {
-				pos = i
+		for a, asgmt := range e.Assignments {
+			pos := -1
+			for i, lc := range asgmt.LaborCodes {
+				if lc.ChargeNumber == chargeNo && lc.Extension == ext {
+					pos = i
+				}
 			}
-		}
-		if pos >= 0 {
-			e.Data.LaborCodes = append(e.Data.LaborCodes[:pos],
-				e.Data.LaborCodes[pos+1:]...)
+			if pos >= 0 {
+				asgmt.LaborCodes = append(asgmt.LaborCodes[:pos], asgmt.LaborCodes[pos+1:]...)
+				e.Assignments[a] = asgmt
+			}
 		}
 	}
 }
 
 func (e *Employee) DeleteLeavesBetweenDates(start, end time.Time) {
-	for i := len(e.Data.Leaves) - 1; i >= 0; i-- {
-		if e.Data.Leaves[i].LeaveDate.Equal(start) ||
-			e.Data.Leaves[i].LeaveDate.Equal(end) ||
-			(e.Data.Leaves[i].LeaveDate.After(start) &&
-				e.Data.Leaves[i].LeaveDate.Before(end)) {
-			e.Data.Leaves = append(e.Data.Leaves[:i], e.Data.Leaves[i+1:]...)
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
+	for i := len(e.Leaves) - 1; i >= 0; i-- {
+		if e.Leaves[i].LeaveDate.Equal(start) ||
+			e.Leaves[i].LeaveDate.Equal(end) ||
+			(e.Leaves[i].LeaveDate.After(start) &&
+				e.Leaves[i].LeaveDate.Before(end)) {
+			e.Leaves = append(e.Leaves[:i], e.Leaves[i+1:]...)
 		}
 	}
 }
@@ -917,15 +1018,20 @@ func (e *Employee) GetWorkedHoursForLabor(chgno, ext string,
 
 func (e *Employee) GetForecastHours(chgno, ext string,
 	start, end time.Time, workcodes []EmployeeCompareCode) float64 {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	answer := 0.0
 
 	// first check to see if assigned this labor code, if not
 	// return 0 hours
 	found := false
-	for _, lc := range e.Data.LaborCodes {
-		if strings.EqualFold(chgno, lc.ChargeNumber) &&
-			strings.EqualFold(ext, lc.Extension) {
-			found = true
+	for _, asgmt := range e.Assignments {
+		for _, lc := range asgmt.LaborCodes {
+			if strings.EqualFold(chgno, lc.ChargeNumber) &&
+				strings.EqualFold(ext, lc.Extension) {
+				found = true
+			}
 		}
 	}
 	if !found {
@@ -961,6 +1067,9 @@ func (e *Employee) GetForecastHours(chgno, ext string,
 }
 
 func (e *Employee) GetLastWorkday() time.Time {
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
 	sort.Sort(ByEmployeeWork(e.Work))
 	answer := time.Date(1970, 1, 1, 0, 0, 0, 0, time.UTC)
 	if len(e.Work) > 0 {

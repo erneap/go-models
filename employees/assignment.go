@@ -10,14 +10,15 @@ import (
 )
 
 type Assignment struct {
-	ID           uint       `json:"id" bson:"id"`
-	Site         string     `json:"site" bson:"site"`
-	Workcenter   string     `json:"workcenter" bson:"workcenter"`
-	StartDate    time.Time  `json:"startDate" bson:"startDate"`
-	EndDate      time.Time  `json:"endDate" bson:"endDate"`
-	Schedules    []Schedule `json:"schedules" bson:"schedules"`
-	RotationDate time.Time  `json:"rotationdate" bson:"rotationdate"`
-	RotationDays int        `json:"rotationdays" bson:"rotationdays"`
+	ID           uint                `json:"id" bson:"id"`
+	Site         string              `json:"site" bson:"site"`
+	Workcenter   string              `json:"workcenter" bson:"workcenter"`
+	StartDate    time.Time           `json:"startDate" bson:"startDate"`
+	EndDate      time.Time           `json:"endDate" bson:"endDate"`
+	Schedules    []Schedule          `json:"schedules" bson:"schedules"`
+	RotationDate time.Time           `json:"rotationdate" bson:"rotationdate"`
+	RotationDays int                 `json:"rotationdays" bson:"rotationdays"`
+	LaborCodes   []EmployeeLaborCode `json:"laborcodes,omitempty" bson:"laborcodes,omitempty"`
 }
 
 type ByAssignment []Assignment
@@ -128,6 +129,35 @@ func (a *Assignment) RemoveSchedule(schID uint) {
 			wd.Code = ""
 			wd.Hours = 0.0
 		}
+	}
+}
+
+func (a *Assignment) AddLaborCode(chgno, ext string) {
+	found := false
+	for _, lc := range a.LaborCodes {
+		if strings.EqualFold(lc.ChargeNumber, chgno) &&
+			strings.EqualFold(lc.Extension, ext) {
+			found = true
+		}
+	}
+	if !found {
+		a.LaborCodes = append(a.LaborCodes, EmployeeLaborCode{
+			ChargeNumber: chgno,
+			Extension:    ext,
+		})
+	}
+}
+
+func (a *Assignment) RemoveLaborCode(chgno, ext string) {
+	remove := -1
+	for r, lc := range a.LaborCodes {
+		if strings.EqualFold(lc.ChargeNumber, chgno) &&
+			strings.EqualFold(lc.Extension, ext) {
+			remove = r
+		}
+	}
+	if remove >= 0 {
+		a.LaborCodes = append(a.LaborCodes[:remove], a.LaborCodes[remove+1:]...)
 	}
 }
 
