@@ -88,7 +88,7 @@ func (e *Employee) ConvertFromData() error {
 				e.Assignments[a] = asgmt
 			}
 		}
-		//e.Data = nil
+		e.Data = nil
 	}
 	return nil
 }
