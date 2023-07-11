@@ -73,7 +73,6 @@ func (e *Employee) ConvertFromData() error {
 	if e.Data != nil {
 		e.CompanyInfo = e.Data.CompanyInfo
 		e.Leaves = e.Data.Leaves
-		e.Leaves = e.Data.Leaves[:0]
 		e.Assignments = e.Data.Assignments
 		e.Variations = e.Data.Variations
 		e.Balances = e.Data.Balances
