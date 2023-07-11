@@ -135,7 +135,7 @@ func (e *Employee) IsAssigned(site, workcenter string, start, end time.Time) boo
 		e.ConvertFromData()
 	}
 	answer := false
-	for _, asgmt := range e.Data.Assignments {
+	for _, asgmt := range e.Assignments {
 		if strings.EqualFold(asgmt.Site, site) &&
 			strings.EqualFold(asgmt.Workcenter, workcenter) &&
 			asgmt.StartDate.After(end) && asgmt.EndDate.Before((start)) {
@@ -150,7 +150,7 @@ func (e *Employee) AtSite(site string, start, end time.Time) bool {
 		e.ConvertFromData()
 	}
 	answer := false
-	for _, asgmt := range e.Data.Assignments {
+	for _, asgmt := range e.Assignments {
 		if strings.EqualFold(asgmt.Site, site) &&
 			asgmt.StartDate.Before(end) && asgmt.EndDate.After((start)) {
 			answer = true
