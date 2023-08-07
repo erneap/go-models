@@ -1062,6 +1062,9 @@ func (e *Employee) GetForecastHours(chgno, ext string,
 				if wd != nil && wd.Code != "" {
 					for _, wc := range workcodes {
 						if strings.EqualFold(wc.Code, wd.Code) && !wc.IsLeave {
+							if strings.EqualFold("V", wd.Code) {
+								fmt.Printf("%s ?= %s, IsLeave: %t", wc.Code, wd.Code, wc.IsLeave)
+							}
 							std := e.GetStandardWorkday(current)
 							for _, asgmt := range e.Assignments {
 								if current.Equal(asgmt.StartDate) || current.Equal(asgmt.EndDate) ||
