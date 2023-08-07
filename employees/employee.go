@@ -1037,6 +1037,14 @@ func (e *Employee) GetForecastHours(chgno, ext string,
 		return 0.0
 	}
 
+	// determine last day of actual recorded work so than
+	// forecast hours don't overlap.
+	lastWork := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+	if len(e.Work) > 0 {
+		sort.Sort(ByEmployeeWork(e.Work))
+		lastWork = e.Work[len(e.Work)-1].DateWorked
+	}
+
 	// now step through the days of the period to:
 	// 1) see if they had worked any charge numbers during
 	//		the period, if working add 0 hours
@@ -1047,20 +1055,22 @@ func (e *Employee) GetForecastHours(chgno, ext string,
 	current := time.Date(start.Year(), start.Month(),
 		start.Day(), 0, 0, 0, 0, time.UTC)
 	for current.Before(end) {
-		hours := e.GetWorkedHours(current, current.AddDate(0, 0, 1))
-		if hours == 0.0 {
-			wd := e.GetWorkday(current, 0.0)
-			if wd != nil && wd.Code != "" {
-				for _, wc := range workcodes {
-					if strings.EqualFold(wc.Code, wd.Code) && !wc.IsLeave {
-						std := e.GetStandardWorkday(current)
-						for _, asgmt := range e.Assignments {
-							if current.Equal(asgmt.StartDate) || current.Equal(asgmt.EndDate) ||
-								(current.After(asgmt.StartDate) && current.Before(asgmt.EndDate)) {
-								for _, lc := range asgmt.LaborCodes {
-									if strings.EqualFold(chgno, lc.ChargeNumber) &&
-										strings.EqualFold(ext, lc.Extension) {
-										answer += std
+		if current.After(lastWork) {
+			hours := e.GetWorkedHours(current, current.AddDate(0, 0, 1))
+			if hours == 0.0 {
+				wd := e.GetWorkday(current, 0.0)
+				if wd != nil && wd.Code != "" {
+					for _, wc := range workcodes {
+						if strings.EqualFold(wc.Code, wd.Code) && !wc.IsLeave {
+							std := e.GetStandardWorkday(current)
+							for _, asgmt := range e.Assignments {
+								if current.Equal(asgmt.StartDate) || current.Equal(asgmt.EndDate) ||
+									(current.After(asgmt.StartDate) && current.Before(asgmt.EndDate)) {
+									for _, lc := range asgmt.LaborCodes {
+										if strings.EqualFold(chgno, lc.ChargeNumber) &&
+											strings.EqualFold(ext, lc.Extension) {
+											answer += std
+										}
 									}
 								}
 							}
