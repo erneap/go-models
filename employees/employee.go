@@ -179,7 +179,9 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 	}
 	bLeave := false
 	for _, lv := range e.Leaves {
-		if lv.LeaveDate.Equal(date) {
+		if lv.LeaveDate.Year() == date.Year() &&
+			lv.LeaveDate.Month() == date.Month() &&
+			lv.LeaveDate.Day() == date.Day() {
 			if !bLeave {
 				wkday = &Workday{
 					ID:         uint(0),
@@ -1062,9 +1064,6 @@ func (e *Employee) GetForecastHours(chgno, ext string,
 				if wd != nil && wd.Code != "" {
 					for _, wc := range workcodes {
 						if strings.EqualFold(wc.Code, wd.Code) && !wc.IsLeave {
-							if strings.EqualFold("V", wd.Code) {
-								fmt.Printf("%s ?= %s, IsLeave: %t", wc.Code, wd.Code, wc.IsLeave)
-							}
 							std := e.GetStandardWorkday(current)
 							for _, asgmt := range e.Assignments {
 								if current.Equal(asgmt.StartDate) || current.Equal(asgmt.EndDate) ||
