@@ -27,10 +27,6 @@ func (s *SmtpServer) Send(to []string, subject, body string) error {
 	auth := smtp.PlainAuth("", s.From, s.Password, s.Host)
 
 	err := smtp.SendMail(s.Address(), auth, s.From, to, message)
-	if err != nil {
-		fmt.Println(err)
-		return err
-	}
 	return err
 }
 
@@ -43,5 +39,8 @@ func SendMail(to []string, subject, body string) error {
 	}
 
 	err := smtpServer.Send(to, subject, body)
+	if err != nil {
+		fmt.Println(err)
+	}
 	return err
 }
