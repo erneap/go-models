@@ -1,58 +1,47 @@
 package svcs
 
 import (
-	"encoding/base64"
 	"fmt"
 	"net/smtp"
-	"strings"
 
 	"github.com/erneap/go-models/config"
 )
 
+type SmtpServer struct {
+	Host     string
+	Port     string
+	Password string
+	From     string
+}
+
+func (s *SmtpServer) Address() string {
+	return s.Host + ":" + s.Port
+}
+
+func (s *SmtpServer) Send(to []string, subject, body string) error {
+	subj := "Subject: " + subject + "\n"
+	mime := "MIME-version: 1.0;\nContent-Type: text/plain;charset=\"UTF-8\";\n\n"
+
+	message := []byte(subj + mime + "\n" + body)
+
+	auth := smtp.PlainAuth("", s.From, s.Password, s.Host)
+
+	err := smtp.SendMail(s.Address(), auth, s.From, to, message)
+	if err != nil {
+		fmt.Println(err)
+		return err
+	}
+	return err
+}
+
 func SendMail(to []string, subject, body string) error {
-	fmt.Println("Send Message")
-	from := config.Config("SMTP_FROM")
-	fmt.Println(from)
-
-	addr := config.Config("SMTP_SERVER") + ":" + config.Config("SMTP_PORT")
-	fmt.Println(addr)
-
-	r := strings.NewReplacer("\r\n", "", "\r", "", "\n", "", "%0a", "", "%0d", "")
-
-	c, err := smtp.Dial(addr)
-	if err != nil {
-		return err
-	}
-	defer c.Close()
-	if err = c.Mail(r.Replace(from)); err != nil {
-		return err
-	}
-	for i := range to {
-		to[i] = r.Replace(to[i])
-		if err = c.Rcpt(to[i]); err != nil {
-			return err
-		}
+	smtpServer := SmtpServer{
+		Host:     config.Config("SMTP_SERVER"),
+		Port:     config.Config("SMTP_PORT"),
+		Password: config.Config("SMTP_PASS"),
+		From:     config.Config("SMTP_FROM"),
 	}
 
-	w, err := c.Data()
-	if err != nil {
-		return err
-	}
-
-	msg := "To: " + strings.Join(to, ",") + "\r\n" +
-		"From: " + from + "\r\n" +
-		"Subject: " + subject + "\r\n" +
-		"Content-Type: text/html; charset=\"UTF-8\"\r\n" +
-		"Content-Transfer-Encoding: base64\r\n" +
-		"\r\n" + base64.StdEncoding.EncodeToString([]byte(body))
-
-	_, err = w.Write([]byte(msg))
-	if err != nil {
-		return err
-	}
-	err = w.Close()
-	if err != nil {
-		return err
-	}
-	return c.Quit()
+	err := smtpServer.Send(to, subject, body)
+	return err
 }
