@@ -3,6 +3,7 @@ package svcs
 import (
 	"fmt"
 	"net/smtp"
+	"strings"
 
 	"github.com/erneap/go-models/config"
 )
@@ -21,8 +22,9 @@ func (s *SmtpServer) Address() string {
 func (s *SmtpServer) Send(to []string, subject, body string) error {
 	subj := "Subject: " + subject + "\n"
 	mime := "MIME-version: 1.0;\nContent-Type: text/plain;charset=\"UTF-8\";\n\n"
+	toLine := "To: " + strings.Join(to, ",") + "\r\n"
 
-	message := []byte(subj + mime + "\n" + body)
+	message := []byte(toLine + subj + mime + "\n" + body)
 
 	auth := smtp.PlainAuth("", s.From, s.Password, s.Host)
 
