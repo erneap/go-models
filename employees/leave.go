@@ -37,17 +37,31 @@ func (c ByLeaveDay) Less(i, j int) bool {
 }
 func (c ByLeaveDay) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
+type LeaveRequestComment struct {
+	CommentDate time.Time `json:"commentdate" bson:"commentdate"`
+	Comment     string    `json:"comment" bson:"comment"`
+}
+
+type ByLeaveRequestComment []LeaveRequestComment
+
+func (c ByLeaveRequestComment) Len() int { return len(c) }
+func (c ByLeaveRequestComment) Less(i, j int) bool {
+	return c[i].CommentDate.Before(c[i].CommentDate)
+}
+func (c ByLeaveRequestComment) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
 type LeaveRequest struct {
-	ID            string     `json:"id" bson:"id"`
-	EmployeeID    string     `json:"employeeid,omitempty"`
-	RequestDate   time.Time  `json:"requestDate" bson:"requestDate"`
-	PrimaryCode   string     `json:"primarycode" bson:"primarycode"`
-	StartDate     time.Time  `json:"startdate" bson:"startdate"`
-	EndDate       time.Time  `json:"enddate" bson:"enddate"`
-	Status        string     `json:"status" bson:"status"`
-	ApprovedBy    string     `json:"approvedby" bson:"approvedby"`
-	ApprovalDate  time.Time  `json:"approvalDate" bson:"approvalDate"`
-	RequestedDays []LeaveDay `json:"requesteddays" bson:"requesteddays"`
+	ID            string                `json:"id" bson:"id"`
+	EmployeeID    string                `json:"employeeid,omitempty"`
+	RequestDate   time.Time             `json:"requestDate" bson:"requestDate"`
+	PrimaryCode   string                `json:"primarycode" bson:"primarycode"`
+	StartDate     time.Time             `json:"startdate" bson:"startdate"`
+	EndDate       time.Time             `json:"enddate" bson:"enddate"`
+	Status        string                `json:"status" bson:"status"`
+	ApprovedBy    string                `json:"approvedby" bson:"approvedby"`
+	ApprovalDate  time.Time             `json:"approvalDate" bson:"approvalDate"`
+	RequestedDays []LeaveDay            `json:"requesteddays" bson:"requesteddays"`
+	Comments      []LeaveRequestComment `json:"comments,omitempty" bson:"comments,omitempty"`
 }
 
 type ByLeaveRequest []LeaveRequest
