@@ -795,6 +795,21 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				}
 				message = "Leave Request: Leave Request approved."
 				e.ChangeApprovedLeaveDates(req)
+			case "unapprove":
+				req.ApprovedBy = ""
+				req.ApprovalDate = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
+				req.Status = "REQUESTED"
+				for d, day := range req.RequestedDays {
+					day.Status = "REQUESTED"
+					req.RequestedDays[d] = day
+				}
+				cmt := LeaveRequestComment{
+					CommentDate: time.Now().UTC(),
+					Comment:     value,
+				}
+				req.Comments = append(req.Comments, cmt)
+				message = "Leave Request: Leave Request unapproved.\n" +
+					"Comment: " + value
 			case "day", "requestday":
 				parts := strings.Split(value, "|")
 				lvDate, _ := time.Parse("2006-01-02", parts[0])
