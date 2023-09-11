@@ -178,28 +178,43 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 		}
 	}
 	bLeave := false
-	for _, lv := range e.Leaves {
-		if lv.LeaveDate.Hour() != 0 {
-			delta := time.Hour * time.Duration(offset)
-			lv.LeaveDate = lv.LeaveDate.Add(delta)
+	bActual := false
+	work := 0.0
+	if len(e.Work) > 0 {
+		for _, wk := range e.Work {
+			if wk.DateWorked.Year() == date.Year() &&
+				wk.DateWorked.Month() == date.Month() &&
+				wk.DateWorked.Day() == date.Day() &&
+				wk.Hours > 0.0 {
+				bActual = true
+				work += wk.Hours
+			}
 		}
-		if lv.LeaveDate.Year() == date.Year() &&
-			lv.LeaveDate.Month() == date.Month() &&
-			lv.LeaveDate.Day() == date.Day() {
-			if !bLeave {
-				wkday = &Workday{
-					ID:         uint(0),
-					Workcenter: "",
-					Code:       lv.Code,
-					Hours:      lv.Hours,
-				}
-				bLeave = true
-			} else {
-				if lv.Hours <= wkday.Hours {
-					wkday.Hours += lv.Hours
+	}
+	if !bActual && work <= 0.0 {
+		for _, lv := range e.Leaves {
+			if lv.LeaveDate.Hour() != 0 {
+				delta := time.Hour * time.Duration(offset)
+				lv.LeaveDate = lv.LeaveDate.Add(delta)
+			}
+			if lv.LeaveDate.Year() == date.Year() &&
+				lv.LeaveDate.Month() == date.Month() &&
+				lv.LeaveDate.Day() == date.Day() {
+				if !bLeave {
+					wkday = &Workday{
+						ID:         uint(0),
+						Workcenter: "",
+						Code:       lv.Code,
+						Hours:      lv.Hours,
+					}
+					bLeave = true
 				} else {
-					wkday.Hours += lv.Hours
-					wkday.Code = lv.Code
+					if lv.Hours <= wkday.Hours {
+						wkday.Hours += lv.Hours
+					} else {
+						wkday.Hours += lv.Hours
+						wkday.Code = lv.Code
+					}
 				}
 			}
 		}
