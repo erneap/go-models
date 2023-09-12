@@ -177,8 +177,9 @@ func (c ByWorkday) Less(i, j int) bool {
 func (c ByWorkday) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
 type Schedule struct {
-	ID       uint      `json:"id" bson:"id"`
-	Workdays []Workday `json:"workdays" bson:"workdays"`
+	ID        uint      `json:"id" bson:"id"`
+	Workdays  []Workday `json:"workdays" bson:"workdays"`
+	ShowDates bool      `json:"showdates,omitempty" bson:"showdates,omiteempty"`
 }
 
 type BySchedule []Schedule
