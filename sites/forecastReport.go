@@ -33,6 +33,7 @@ type ForecastReport struct {
 	EndDate    time.Time        `json:"endDate" bson:"endDate"`
 	Periods    []ForecastPeriod `json:"periods,omitempty" bson:"periods,omitempty"`
 	LaborCodes []LaborCode      `json:"laborCodes,omitempty" bson:"laborCodes,omitempty"`
+	CompanyID  string           `json:"companyid,omitempty" bson:"companyid,omitempty"`
 }
 
 type ByForecastReport []ForecastReport
