@@ -2,14 +2,16 @@ package sites
 
 import (
 	"time"
+
+	"github.com/erneap/go-models/labor"
 )
 
 type CofSCompany struct {
-	ID             string      `json:"id" bson:"id"`
-	SignatureBlock string      `json:"signature" bson:"signature"`
-	LaborCodes     []LaborCode `json:"laborcodes,omitempty" bson:"laborcodes,omitempty"`
-	SortID         int         `json:"sortid" bson:"sortid"`
-	AddExercises   bool        `json:"exercises" bson:"exercises"`
+	ID             string            `json:"id" bson:"id"`
+	SignatureBlock string            `json:"signature" bson:"signature"`
+	LaborCodes     []labor.LaborCode `json:"laborcodes,omitempty" bson:"laborcodes,omitempty"`
+	SortID         int               `json:"sortid" bson:"sortid"`
+	AddExercises   bool              `json:"exercises" bson:"exercises"`
 }
 
 type ByCofSCompany []CofSCompany

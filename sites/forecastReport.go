@@ -3,6 +3,8 @@ package sites
 import (
 	"sort"
 	"time"
+
+	"github.com/erneap/go-models/labor"
 )
 
 type ForecastPeriod struct {
@@ -27,13 +29,13 @@ func (c ByDate) Less(i, j int) bool {
 func (c ByDate) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
 type ForecastReport struct {
-	ID         int              `json:"id" bson:"id"`
-	Name       string           `json:"name" bson:"name"`
-	StartDate  time.Time        `json:"startDate" bson:"startDate"`
-	EndDate    time.Time        `json:"endDate" bson:"endDate"`
-	Periods    []ForecastPeriod `json:"periods,omitempty" bson:"periods,omitempty"`
-	LaborCodes []LaborCode      `json:"laborCodes,omitempty" bson:"laborCodes,omitempty"`
-	CompanyID  string           `json:"companyid,omitempty" bson:"companyid,omitempty"`
+	ID         int               `json:"id" bson:"id"`
+	Name       string            `json:"name" bson:"name"`
+	StartDate  time.Time         `json:"startDate" bson:"startDate"`
+	EndDate    time.Time         `json:"endDate" bson:"endDate"`
+	Periods    []ForecastPeriod  `json:"periods,omitempty" bson:"periods,omitempty"`
+	LaborCodes []labor.LaborCode `json:"laborCodes,omitempty" bson:"laborCodes,omitempty"`
+	CompanyID  string            `json:"companyid,omitempty" bson:"companyid,omitempty"`
 }
 
 type ByForecastReport []ForecastReport

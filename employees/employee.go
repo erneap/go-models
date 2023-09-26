@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/erneap/go-models/labor"
 	"github.com/erneap/go-models/users"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -1051,7 +1052,7 @@ func (e *Employee) GetWorkedHoursForLabor(chgno, ext string,
 	return answer
 }
 
-func (e *Employee) GetForecastHours(chgno, ext string,
+func (e *Employee) GetForecastHours(lCode labor.LaborCode,
 	start, end time.Time, workcodes []EmployeeCompareCode,
 	offset float64) float64 {
 	if e.Data != nil {
@@ -1064,13 +1065,19 @@ func (e *Employee) GetForecastHours(chgno, ext string,
 	found := false
 	for _, asgmt := range e.Assignments {
 		for _, lc := range asgmt.LaborCodes {
-			if strings.EqualFold(chgno, lc.ChargeNumber) &&
-				strings.EqualFold(ext, lc.Extension) {
+			if strings.EqualFold(lCode.ChargeNumber, lc.ChargeNumber) &&
+				strings.EqualFold(lCode.Extension, lc.Extension) {
 				found = true
 			}
 		}
 	}
 	if !found {
+		return 0.0
+	}
+
+	// determine if provided labor code is applicable in
+	// period.
+	if lCode.EndDate.Before(start) || lCode.StartDate.After(end) {
 		return 0.0
 	}
 
@@ -1104,8 +1111,8 @@ func (e *Employee) GetForecastHours(chgno, ext string,
 								if current.Equal(asgmt.StartDate) || current.Equal(asgmt.EndDate) ||
 									(current.After(asgmt.StartDate) && current.Before(asgmt.EndDate)) {
 									for _, lc := range asgmt.LaborCodes {
-										if strings.EqualFold(chgno, lc.ChargeNumber) &&
-											strings.EqualFold(ext, lc.Extension) {
+										if strings.EqualFold(lCode.ChargeNumber, lc.ChargeNumber) &&
+											strings.EqualFold(lCode.Extension, lc.Extension) {
 											answer += std
 										}
 									}

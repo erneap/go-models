@@ -1,6 +1,9 @@
 package sites
 
-import "github.com/erneap/go-models/employees"
+import (
+	"github.com/erneap/go-models/employees"
+	"github.com/erneap/go-models/labor"
+)
 
 type Site struct {
 	ID              string               `json:"id" bson:"id"`
@@ -8,7 +11,7 @@ type Site struct {
 	UtcOffset       float64              `json:"utcOffset" bson:"utcOffset"`
 	ShowMids        bool                 `json:"showMids" bson:"showMids"`
 	Workcenters     []Workcenter         `json:"workcenters,omitempty" bson:"workcenters,omitempty"`
-	LaborCodes      []LaborCode          `json:"laborCodes,omitempty" bson:"laborCodes,omitempty"`
+	LaborCodes      []labor.LaborCode    `json:"laborCodes,omitempty" bson:"laborCodes,omitempty"`
 	ForecastReports []ForecastReport     `json:"forecasts,omitempty" bson:"forecasts,omitempty"`
 	CofSReports     []CofSReport         `json:"cofs,omitempty" bson:"cofs,omitempty"`
 	Employees       []employees.Employee `json:"employees,omitempty" bson:"-"`
