@@ -1102,18 +1102,21 @@ func (e *Employee) GetForecastHours(lCode labor.LaborCode,
 		if current.After(lastWork) {
 			hours := e.GetWorkedHours(current, current.AddDate(0, 0, 1))
 			if hours == 0.0 {
-				wd := e.GetWorkday(current, offset)
-				if wd != nil && wd.Code != "" {
-					for _, wc := range workcodes {
-						if strings.EqualFold(wc.Code, wd.Code) && !wc.IsLeave {
-							std := e.GetStandardWorkday(current)
-							for _, asgmt := range e.Assignments {
-								if current.Equal(asgmt.StartDate) || current.Equal(asgmt.EndDate) ||
-									(current.After(asgmt.StartDate) && current.Before(asgmt.EndDate)) {
-									for _, lc := range asgmt.LaborCodes {
-										if strings.EqualFold(lCode.ChargeNumber, lc.ChargeNumber) &&
-											strings.EqualFold(lCode.Extension, lc.Extension) {
-											answer += std
+				if current.Equal(lCode.StartDate) || current.Equal(lCode.EndDate) ||
+					(current.After(lCode.StartDate) && current.Before(lCode.EndDate)) {
+					wd := e.GetWorkday(current, offset)
+					if wd != nil && wd.Code != "" {
+						for _, wc := range workcodes {
+							if strings.EqualFold(wc.Code, wd.Code) && !wc.IsLeave {
+								std := e.GetStandardWorkday(current)
+								for _, asgmt := range e.Assignments {
+									if current.Equal(asgmt.StartDate) || current.Equal(asgmt.EndDate) ||
+										(current.After(asgmt.StartDate) && current.Before(asgmt.EndDate)) {
+										for _, lc := range asgmt.LaborCodes {
+											if strings.EqualFold(lCode.ChargeNumber, lc.ChargeNumber) &&
+												strings.EqualFold(lCode.Extension, lc.Extension) {
+												answer += std
+											}
 										}
 									}
 								}
