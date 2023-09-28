@@ -101,6 +101,10 @@ type EmployeeName struct {
 }
 
 func (en *EmployeeName) GetLastFirst() string {
+	return en.LastName + ", " + en.FirstName
+}
+
+func (en *EmployeeName) GetLastFirstMI() string {
 	if en.MiddleName != "" {
 		return en.LastName + ", " + en.FirstName + " " + en.MiddleName[0:1]
 	}
