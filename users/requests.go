@@ -11,7 +11,6 @@ type UpdateRequest struct {
 	OptionalID string `json:"optional,omitempty"`
 	Field      string `json:"field"`
 	Value      string `json:"value"`
-	Requestor  string `json:"requestor"`
 }
 
 type AddUserRequest struct {
@@ -21,7 +20,6 @@ type AddUserRequest struct {
 	LastName     string `json:"lastName"`
 	Password     string `json:"password"`
 	Application  string `json:"application"`
-	Requestor    string `json:"requestor"`
 }
 
 type PasswordResetRequest struct {
@@ -29,5 +27,4 @@ type PasswordResetRequest struct {
 	Password     string `json:"password"`
 	Token        string `json:"token"`
 	Application  string `json:"application:omitempty"`
-	Requestor    string `json:"requestor"`
 }

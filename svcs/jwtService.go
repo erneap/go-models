@@ -53,6 +53,18 @@ func ValidateToken(signedToken string) (*users.JWTClaim, error) {
 	return claims, nil
 }
 
+func GetRequestor(context *gin.Context) string {
+	tokenString := context.GetHeader("Authorization")
+	if tokenString == "" {
+		return ""
+	}
+	claims, err := ValidateToken(tokenString)
+	if err != nil {
+		return ""
+	}
+	return claims.UserID
+}
+
 func CheckJWT(app string) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		tokenString := context.GetHeader("Authorization")
