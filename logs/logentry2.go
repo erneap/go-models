@@ -41,6 +41,6 @@ type ByLogEntry2 []LogEntry2
 
 func (c ByLogEntry2) Len() int { return len(c) }
 func (c ByLogEntry2) Less(i, j int) bool {
-	return c[i].EntryDate.After(c[j].EntryDate)
+	return c[i].EntryDate.Before(c[j].EntryDate)
 }
 func (c ByLogEntry2) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
