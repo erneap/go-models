@@ -168,7 +168,21 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 		e.ConvertFromData()
 	}
 	var wkday *Workday = nil
+	work := 0.0
+	stdWorkDay := e.GetStandardWorkday(date)
+	lastWork := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	var siteid string = ""
+	for _, wk := range e.Work {
+		if wk.DateWorked.Year() == date.Year() &&
+			wk.DateWorked.Month() == date.Month() &&
+			wk.DateWorked.Day() == date.Day() {
+			work += wk.Hours
+		}
+		if wk.DateWorked.After(lastWork) {
+			lastWork = time.Date(wk.DateWorked.Year(), wk.DateWorked.Month(),
+				wk.DateWorked.Day(), 0, 0, 0, 0, time.UTC)
+		}
+	}
 	for _, asgmt := range e.Assignments {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
@@ -182,45 +196,24 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 			wkday = vari.GetWorkday(siteid, date)
 		}
 	}
-	bLeave := false
-	bActual := false
-	work := 0.0
-	if len(e.Work) > 0 {
-		for _, wk := range e.Work {
-			if wk.DateWorked.Year() == date.Year() &&
-				wk.DateWorked.Month() == date.Month() &&
-				wk.DateWorked.Day() == date.Day() &&
-				wk.Hours > 0.0 {
-				bActual = true
-				work += wk.Hours
-			}
-		}
+	if work > 0.0 {
+		return wkday
 	}
-	if !bActual && work <= 0.0 {
-		for _, lv := range e.Leaves {
-			if lv.LeaveDate.Hour() != 0 {
-				delta := time.Hour * time.Duration(offset)
-				lv.LeaveDate = lv.LeaveDate.Add(delta)
-			}
-			if lv.LeaveDate.Year() == date.Year() &&
-				lv.LeaveDate.Month() == date.Month() &&
-				lv.LeaveDate.Day() == date.Day() {
-				if !bLeave {
-					wkday = &Workday{
-						ID:         uint(0),
-						Workcenter: "",
-						Code:       lv.Code,
-						Hours:      lv.Hours,
-					}
-					bLeave = true
-				} else {
-					if lv.Hours <= wkday.Hours {
-						wkday.Hours += lv.Hours
-					} else {
-						wkday.Hours += lv.Hours
-						wkday.Code = lv.Code
-					}
-				}
+
+	for _, lv := range e.Leaves {
+		if lv.LeaveDate.Hour() != 0 {
+			delta := time.Hour * time.Duration(offset)
+			lv.LeaveDate = lv.LeaveDate.Add(delta)
+		}
+		if lv.LeaveDate.Year() == date.Year() &&
+			lv.LeaveDate.Month() == date.Month() &&
+			lv.LeaveDate.Day() == date.Day() &&
+			(lv.Hours > (stdWorkDay/2) || date.Before(lv.LeaveDate)) {
+			wkday = &Workday{
+				ID:         uint(0),
+				Workcenter: "",
+				Code:       lv.Code,
+				Hours:      lv.Hours,
 			}
 		}
 	}
