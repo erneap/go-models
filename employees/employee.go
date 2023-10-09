@@ -169,7 +169,12 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 	}
 	var wkday *Workday = nil
 	work := 0.0
-	stdWorkDay := e.GetStandardWorkday(date)
+	stdWorkDay := 8.0
+	for _, asgmt := range e.Assignments {
+		if asgmt.UseAssignment(e.SiteID, date) {
+			stdWorkDay = asgmt.GetStandardWorkday()
+		}
+	}
 	lastWork := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	var siteid string = ""
 	for _, wk := range e.Work {

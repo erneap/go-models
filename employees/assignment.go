@@ -38,6 +38,18 @@ func (a *Assignment) UseAssignment(site string, date time.Time) bool {
 		(a.EndDate.Equal(date) || a.EndDate.After(date))
 }
 
+func (a *Assignment) GetStandardWorkday() float64 {
+	weekhours := 40.0
+	count := 0
+	sch := a.Schedules[0]
+	for _, wd := range sch.Workdays {
+		if wd.Code != "" {
+			count++
+		}
+	}
+	return weekhours / float64(count)
+}
+
 func (a *Assignment) GetWorkday(date time.Time, offset float64) *Workday {
 	// get the site utc offset
 	zoneID := "UTC"
