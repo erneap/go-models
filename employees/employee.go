@@ -209,11 +209,13 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 			lv.LeaveDate.Month() == date.Month() &&
 			lv.LeaveDate.Day() == date.Day() &&
 			(lv.Hours > (stdWorkDay/2) || date.Before(lv.LeaveDate)) {
-			wkday = &Workday{
-				ID:         uint(0),
-				Workcenter: "",
-				Code:       lv.Code,
-				Hours:      lv.Hours,
+			if lv.Hours > wkday.Hours {
+				wkday = &Workday{
+					ID:         uint(0),
+					Workcenter: "",
+					Code:       lv.Code,
+					Hours:      lv.Hours,
+				}
 			}
 		}
 	}
