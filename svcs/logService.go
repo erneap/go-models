@@ -243,6 +243,7 @@ func GetLogEntries2(portion string, year int, emp *employees.Employee) ([]logs.L
 	}
 
 	logPath = path.Join(logPath, fmt.Sprintf("%s-%d.log", portion, year))
+	fmt.Println(logPath)
 
 	if _, err := os.Stat(logPath); errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("%s does not exist", logPath)
