@@ -229,7 +229,7 @@ func AddLogEntry2(portion, category, title, msg string, emp *employees.Employee)
 
 func GetLogEntries2(portion string, year int, emp *employees.Employee) ([]logs.LogEntry2, error) {
 	site := "General"
-	if emp != nil || !strings.EqualFold(portion, "authentication") {
+	if emp != nil && !strings.EqualFold(portion, "authentication") {
 		site = emp.SiteID
 	}
 	logBase := os.Getenv("LOG_DIR")
@@ -243,7 +243,6 @@ func GetLogEntries2(portion string, year int, emp *employees.Employee) ([]logs.L
 	}
 
 	logPath = path.Join(logPath, fmt.Sprintf("%s-%d.log", portion, year))
-	fmt.Println(logPath)
 
 	if _, err := os.Stat(logPath); errors.Is(err, os.ErrNotExist) {
 		return nil, fmt.Errorf("%s does not exist", logPath)
