@@ -258,10 +258,11 @@ func GetLogEntries2(portion string, year int, emp *employees.Employee) ([]logs.L
 	var entries []logs.LogEntry2
 
 	for _, line := range lines {
-		fmt.Println(line)
-		entry := &logs.LogEntry2{}
-		entry.FromString(line)
-		entries = append(entries, *entry)
+		if strings.TrimSpace(line) != "" {
+			entry := &logs.LogEntry2{}
+			entry.FromString(line)
+			entries = append(entries, *entry)
+		}
 	}
 
 	return entries, nil
