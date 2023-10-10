@@ -189,7 +189,7 @@ func AddLogEntry2(portion, category, title, msg string, emp *employees.Employee)
 	site := "General"
 	if emp != nil {
 		name = emp.Name.GetLastFirst()
-		if !strings.EqualFold(portion, "authentication") {
+		if !strings.EqualFold(portion, "authenticate") {
 			site = emp.SiteID
 		}
 	}
@@ -229,7 +229,7 @@ func AddLogEntry2(portion, category, title, msg string, emp *employees.Employee)
 
 func GetLogEntries2(portion string, year int, emp *employees.Employee) ([]logs.LogEntry2, error) {
 	site := "General"
-	if emp != nil && !strings.EqualFold(portion, "authentication") {
+	if emp != nil && !strings.EqualFold(portion, "authenticate") {
 		site = emp.SiteID
 	}
 	logBase := os.Getenv("LOG_DIR")
