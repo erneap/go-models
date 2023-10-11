@@ -551,19 +551,23 @@ func (e *Employee) UpdateLeave(id int, field, value string) (*LeaveDay, error) {
 	return oldLv, nil
 }
 
-func (e *Employee) DeleteLeave(id int) {
+func (e *Employee) DeleteLeave(id int) *LeaveDay {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
+	var oldLv *LeaveDay
+	oldLv = nil
 	pos := -1
 	for i, lv := range e.Leaves {
 		if lv.ID == id {
+			oldLv = &lv
 			pos = i
 		}
 	}
 	if pos >= 0 {
 		e.Leaves = append(e.Leaves[:pos], e.Leaves[pos+1:]...)
 	}
+	return oldLv
 }
 
 func (e *Employee) GetLeaveHours(start, end time.Time) float64 {
