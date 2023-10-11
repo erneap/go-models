@@ -641,18 +641,21 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 }
 
 func (e *Employee) UpdateLeaveRequest(request, field, value string,
-	offset float64) (string, error) {
+	offset float64) (string, *LeaveRequest, error) {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
 	message := ""
+	var lr *LeaveRequest
+	lr = nil
 	for i, req := range e.Requests {
 		if req.ID == request {
+			lr = &req
 			switch strings.ToLower(field) {
 			case "startdate", "start":
 				lvDate, err := time.Parse("2006-01-02", value)
 				if err != nil {
-					return "", err
+					return "", nil, err
 				}
 				if lvDate.Before(req.StartDate) || lvDate.After(req.EndDate) {
 					if strings.EqualFold(req.Status, "approved") {
@@ -696,7 +699,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 			case "enddate", "end":
 				lvDate, err := time.Parse("2006-01-02", value)
 				if err != nil {
-					return "", err
+					return "", nil, err
 				}
 				if lvDate.Before(req.StartDate) || lvDate.After(req.EndDate) {
 					if strings.EqualFold(req.Status, "approved") {
@@ -743,11 +746,11 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				parts := strings.Split(value, "|")
 				start, err := time.ParseInLocation("2006-01-02", parts[0], time.UTC)
 				if err != nil {
-					return "", err
+					return "", nil, err
 				}
 				end, err := time.ParseInLocation("2006-01-02", parts[1], time.UTC)
 				if err != nil {
-					return "", nil
+					return "", nil, err
 				}
 				start = time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
 					time.UTC)
@@ -864,7 +867,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 			e.Requests[i] = req
 		}
 	}
-	return message, nil
+	return message, lr, nil
 }
 
 func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
