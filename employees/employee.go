@@ -506,19 +506,30 @@ func (e *Employee) AddLeave(id int, date time.Time, code, status string,
 	}
 }
 
-func (e *Employee) UpdateLeave(id int, field, value string) error {
+func (e *Employee) UpdateLeave(id int, field, value string) (*LeaveDay, error) {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
+	var oldLv *LeaveDay
+	oldLv = nil
 	found := false
 	for i := 0; i < len(e.Leaves) && !found; i++ {
 		lv := e.Leaves[i]
 		if lv.ID == id {
+			oldLv = &LeaveDay{
+				ID: lv.ID,
+				LeaveDate: time.Date(lv.LeaveDate.Year(), lv.LeaveDate.Month(),
+					lv.LeaveDate.Day(), 0, 0, 0, 0, time.UTC),
+				Code:      lv.Code,
+				Hours:     lv.Hours,
+				Status:    lv.Status,
+				RequestID: lv.RequestID,
+			}
 			switch strings.ToLower(field) {
 			case "date":
 				date, err := time.ParseInLocation("01/02/2006", value, time.UTC)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				lv.LeaveDate = date
 			case "code":
@@ -526,7 +537,7 @@ func (e *Employee) UpdateLeave(id int, field, value string) error {
 			case "hours":
 				hrs, err := strconv.ParseFloat(value, 64)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				lv.Hours = hrs
 			case "status":
@@ -537,7 +548,7 @@ func (e *Employee) UpdateLeave(id int, field, value string) error {
 			e.Leaves[i] = lv
 		}
 	}
-	return nil
+	return oldLv, nil
 }
 
 func (e *Employee) DeleteLeave(id int) {
