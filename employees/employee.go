@@ -30,6 +30,8 @@ type Employee struct {
 	LaborCodes  []EmployeeLaborCode `json:"laborCodes,omitempty"`
 	User        *users.User         `json:"user,omitempty" bson:"-"`
 	Work        []Work              `json:"work,omitempty" bson:"-"`
+	ContactInfo []Contact           `json:"contactinfo,omitempty" bson:"contactinfo,omitempty"`
+	Specialties []Specialty         `json:"specialties,omitempty" bson:"specialties,omitempty"`
 }
 
 type ByEmployees []Employee
@@ -1164,6 +1166,102 @@ func (e *Employee) GetLastWorkday() time.Time {
 			work.DateWorked.Day(), 0, 0, 0, 0, time.UTC)
 	}
 	return answer
+}
+
+func (e *Employee) AddContactInfo(typeID int, value string, sortid int) {
+	found := false
+	next := -1
+	for c, contact := range e.ContactInfo {
+		if next < contact.Id {
+			next = contact.Id
+		}
+		if contact.TypeID == typeID {
+			found = true
+			contact.Value = value
+			e.ContactInfo[c] = contact
+		}
+	}
+	if !found {
+		contact := &Contact{
+			Id:     next + 1,
+			TypeID: typeID,
+			Value:  value,
+			SortID: sortid,
+		}
+		e.ContactInfo = append(e.ContactInfo, *contact)
+		sort.Sort(ByEmployeeContact(e.ContactInfo))
+	}
+}
+
+func (e *Employee) ResortContactInfo(teamContacts map[int]int) {
+	for c, contact := range e.ContactInfo {
+		if val, ok := teamContacts[contact.TypeID]; ok {
+			contact.SortID = val
+		}
+		e.ContactInfo[c] = contact
+	}
+	sort.Sort(ByEmployeeContact(e.ContactInfo))
+}
+
+func (e *Employee) DeleteContactInfo(id int) {
+	pos := -1
+	for c, contact := range e.ContactInfo {
+		if contact.Id == id {
+			pos = c
+		}
+	}
+	if pos >= 0 {
+		e.ContactInfo = append(e.ContactInfo[:pos], e.ContactInfo[pos+1:]...)
+	}
+	sort.Sort(ByEmployeeContact(e.ContactInfo))
+}
+
+func (e *Employee) AddSpecialty(specID int, qualified bool, sortid int) {
+	found := false
+	next := -1
+	for s, specialty := range e.Specialties {
+		if next < specialty.Id {
+			next = specialty.Id
+		}
+		if specialty.SpecialtyID == specID {
+			found = true
+			specialty.Qualified = qualified
+			e.Specialties[s] = specialty
+		}
+	}
+	if !found {
+		specialty := &Specialty{
+			Id:          next + 1,
+			SpecialtyID: specID,
+			Qualified:   qualified,
+			SortID:      sortid,
+		}
+		e.Specialties = append(e.Specialties, *specialty)
+	}
+	sort.Sort(ByEmployeeSpecialty(e.Specialties))
+}
+
+func (e *Employee) ResortSpecialties(specialties map[int]int) {
+	for s, spec := range e.Specialties {
+		if val, ok := specialties[spec.SpecialtyID]; ok {
+			spec.SortID = val
+		}
+		e.Specialties[s] = spec
+	}
+	sort.Sort(ByEmployeeSpecialty(e.Specialties))
+}
+
+func (e *Employee) DeleteSpecialty(id int) {
+	pos := -1
+	for s, spec := range e.Specialties {
+		if spec.Id == id {
+			pos = s
+		}
+	}
+	if pos >= 0 {
+		e.Specialties = append(e.Specialties[:pos], e.Specialties[pos+1:]...)
+	}
+	sort.Sort(ByEmployeeSpecialty(e.Specialties))
 }
 
 type EmployeeCompareCode struct {
