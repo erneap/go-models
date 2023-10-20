@@ -633,7 +633,6 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		time.UTC)
 	std := e.GetStandardWorkday(sDate)
 	for sDate.Before(end) || sDate.Equal(end) {
-		fmt.Println(sDate)
 		wd := e.GetWorkday(sDate, offset)
 		if wd.Code != "" {
 			hours := wd.Hours
