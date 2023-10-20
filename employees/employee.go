@@ -623,8 +623,6 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		EndDate:     end,
 		Status:      "DRAFT",
 	}
-	fmt.Println(start)
-	fmt.Println(end)
 	zoneID := "UTC"
 	if offset > 0 {
 		zoneID += "+" + fmt.Sprintf("%0.1f", offset)
@@ -635,6 +633,7 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		time.UTC)
 	std := e.GetStandardWorkday(sDate)
 	for sDate.Before(end) || sDate.Equal(end) {
+		fmt.Println(sDate)
 		wd := e.GetWorkday(sDate, offset)
 		if wd.Code != "" {
 			hours := wd.Hours
