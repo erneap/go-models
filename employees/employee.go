@@ -623,6 +623,8 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		EndDate:     end,
 		Status:      "DRAFT",
 	}
+	fmt.Println(start)
+	fmt.Println(end)
 	zoneID := "UTC"
 	if offset > 0 {
 		zoneID += "+" + fmt.Sprintf("%0.1f", offset)
