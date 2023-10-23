@@ -26,7 +26,8 @@ func (c ByTeam) Less(i, j int) bool {
 }
 func (c ByTeam) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
-func (t *Team) AddContactType(id int, name string) {
+func (t *Team) AddContactType(id int, name string) int {
+	answer := 0
 	found := false
 	next := 0
 	sortid := -1
@@ -41,6 +42,7 @@ func (t *Team) AddContactType(id int, name string) {
 			found = true
 			ctype.Name = name
 			t.ContactTypes[c] = ctype
+			answer = ctype.Id
 		}
 	}
 	if !found {
@@ -49,9 +51,11 @@ func (t *Team) AddContactType(id int, name string) {
 			Name:   name,
 			SortID: sortid + 1,
 		}
+		answer = ctype.Id
 		t.ContactTypes = append(t.ContactTypes, *ctype)
 	}
 	sort.Sort(ByContactType(t.ContactTypes))
+	return answer
 }
 
 func (t *Team) UpdateContactTypeSort(id int, direction string) {
@@ -96,7 +100,9 @@ func (t *Team) DeleteContactType(id int) {
 		t.ContactTypes[c] = cType
 	}
 }
-func (t *Team) AddSpecialtyType(id int, name string) {
+
+func (t *Team) AddSpecialtyType(id int, name string) int {
+	answer := 0
 	found := false
 	next := 0
 	sortid := -1
@@ -110,6 +116,7 @@ func (t *Team) AddSpecialtyType(id int, name string) {
 		if ctype.Id == id {
 			found = true
 			ctype.Name = name
+			answer = ctype.Id
 			t.SpecialtyTypes[c] = ctype
 		}
 	}
@@ -119,9 +126,11 @@ func (t *Team) AddSpecialtyType(id int, name string) {
 			Name:   name,
 			SortID: sortid + 1,
 		}
+		answer = ctype.Id
 		t.SpecialtyTypes = append(t.SpecialtyTypes, *ctype)
 	}
 	sort.Sort(ByContactType(t.ContactTypes))
+	return answer
 }
 
 func (t *Team) UpdateSpecialtyTypeSort(id int, direction string) {
