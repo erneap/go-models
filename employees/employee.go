@@ -1203,6 +1203,19 @@ func (e *Employee) ResortContactInfo(teamContacts map[int]int) {
 	sort.Sort(ByEmployeeContact(e.ContactInfo))
 }
 
+func (e *Employee) DeleteContactInfoByType(id int) {
+	pos := -1
+	for c, contact := range e.ContactInfo {
+		if contact.TypeID == id {
+			pos = c
+		}
+	}
+	if pos >= 0 {
+		e.ContactInfo = append(e.ContactInfo[:pos], e.ContactInfo[pos+1:]...)
+	}
+	sort.Sort(ByEmployeeContact(e.ContactInfo))
+}
+
 func (e *Employee) DeleteContactInfo(id int) {
 	pos := -1
 	for c, contact := range e.ContactInfo {
@@ -1255,6 +1268,19 @@ func (e *Employee) DeleteSpecialty(id int) {
 	pos := -1
 	for s, spec := range e.Specialties {
 		if spec.Id == id {
+			pos = s
+		}
+	}
+	if pos >= 0 {
+		e.Specialties = append(e.Specialties[:pos], e.Specialties[pos+1:]...)
+	}
+	sort.Sort(ByEmployeeSpecialty(e.Specialties))
+}
+
+func (e *Employee) DeleteSpecialtyByType(id int) {
+	pos := -1
+	for s, spec := range e.Specialties {
+		if spec.SpecialtyID == id {
 			pos = s
 		}
 	}
