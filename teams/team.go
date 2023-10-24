@@ -15,7 +15,7 @@ type Team struct {
 	Sites          []sites.Site       `json:"sites" bson:"sites"`
 	Companies      []Company          `json:"companies,omitempty" bson:"companies,omitempty"`
 	ContactTypes   []ContactType      `json:"contacttypes,omitempty" bson:"contacttypes,omitempty"`
-	SpecialtyTypes []SpecialtyType    `json:"specialies,omitempty" bson:"specialties,omitempty"`
+	SpecialtyTypes []SpecialtyType    `json:"specialties,omitempty" bson:"specialties,omitempty"`
 }
 
 type ByTeam []Team
