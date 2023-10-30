@@ -1290,6 +1290,16 @@ func (e *Employee) DeleteSpecialtyByType(id int) {
 	sort.Sort(ByEmployeeSpecialty(e.Specialties))
 }
 
+func (e *Employee) HasSpecialty(spec int) bool {
+	answer := false
+	for _, sp := range e.Specialties {
+		if sp.SpecialtyID == spec {
+			answer = true
+		}
+	}
+	return answer
+}
+
 type EmployeeCompareCode struct {
 	Code    string
 	IsLeave bool
