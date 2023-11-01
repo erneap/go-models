@@ -6,6 +6,7 @@ type Workcode struct {
 	StartTime uint64 `json:"start" bson:"start"`
 	ShiftCode string `json:"shiftCode" bson:"shiftCode"`
 	AltCode   string `json:"altcode,omitempty" bson:"altcode,omitempty"`
+	Search    string `json:"search,omitempty" bson:"search,omitempty"`
 	IsLeave   bool   `json:"isLeave" bson:"isLeave"`
 	TextColor string `json:"textcolor" bson:"textcolor"`
 	BackColor string `json:"backcolor" bson:"backcolor"`
