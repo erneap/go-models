@@ -822,7 +822,9 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					req.RequestedDays[d] = day
 				}
 				message = fmt.Sprintf("Leave Request: Leave Request from %s ",
-					e.Name.GetLastFirst()) + "submitted for approval."
+					e.Name.GetLastFirst()) + "submitted for approval.  " +
+					fmt.Sprintf("Requested Leave Date: %s - %s.",
+						req.StartDate.Format("02 Jan 06"), req.EndDate.Format("02 Jan 06"))
 			case "approve":
 				req.ApprovedBy = value
 				req.ApprovalDate = time.Now().UTC()
