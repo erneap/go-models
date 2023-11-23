@@ -8,7 +8,7 @@ import (
 type CompanyHoliday struct {
 	ID          string      `json:"id" bson:"id"`
 	Name        string      `json:"name" bson:"name"`
-	SortID      int         `json:"sort" bson:"sort"`
+	SortID      uint        `json:"sort" bson:"sort"`
 	ActualDates []time.Time `json:"actualdates,omitempty" bson:"actualdates,omitempty"`
 }
 
