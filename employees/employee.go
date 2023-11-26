@@ -391,17 +391,9 @@ func (e *Employee) RemoveAssignment(id uint) {
 	}
 }
 
-func (e *Employee) PurgeOldData(date time.Time) {
+func (e *Employee) PurgeOldData(date time.Time) bool {
 	if e.Data != nil {
 		e.ConvertFromData()
-	}
-	// purge old assignments based on assignment end date
-	sort.Sort(ByAssignment(e.Assignments))
-	for i := len(e.Assignments) - 1; i >= 0; i-- {
-		if e.Assignments[i].EndDate.Before(date) {
-			e.Assignments = append(e.Assignments[:i],
-				e.Assignments[i+1:]...)
-		}
 	}
 	// purge old variations based on variation end date
 	sort.Sort(ByVariation(e.Variations))
@@ -411,6 +403,34 @@ func (e *Employee) PurgeOldData(date time.Time) {
 				e.Variations[i+1:]...)
 		}
 	}
+
+	// purge old leave and leave requests based on leave date and
+	// leave request end date.
+	sort.Sort(ByLeaveDay(e.Leaves))
+	sort.Sort(ByLeaveRequest(e.Requests))
+	for i := len(e.Leaves) - 1; i >= 0; i-- {
+		if e.Leaves[i].LeaveDate.Before(date) {
+			e.Leaves = append(e.Leaves[:i], e.Leaves[i+1:]...)
+		}
+	}
+	for i := len(e.Requests) - 1; i >= 0; i-- {
+		if e.Requests[i].EndDate.Before(date) {
+			e.Requests = append(e.Requests[:i], e.Requests[i+1:]...)
+		}
+	}
+
+	// purge old leave balances based on year
+	sort.Sort(ByBalance(e.Balances))
+	for i := len(e.Balances) - 1; i >= 0; i-- {
+		if e.Balances[i].Year < date.Year() {
+			e.Balances = append(e.Balances[:i], e.Balances[i+1:]...)
+		}
+	}
+
+	// check if employee quit before purge date
+	sort.Sort(ByAssignment(e.Assignments))
+	asgmt := e.Assignments[len(e.Assignments)-1]
+	return asgmt.EndDate.Before(date)
 }
 
 func (e *Employee) CreateLeaveBalance(year int) {
