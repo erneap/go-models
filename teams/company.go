@@ -34,6 +34,14 @@ func (ch *CompanyHoliday) GetActual(year int) *time.Time {
 	return nil
 }
 
+func (ch *CompanyHoliday) Purge(date time.Time) {
+	for i := len(ch.ActualDates) - 1; i >= 0; i-- {
+		if ch.ActualDates[i].Before(date) {
+			ch.ActualDates = append(ch.ActualDates[:i], ch.ActualDates[i+1:]...)
+		}
+	}
+}
+
 type Company struct {
 	ID             string           `json:"id" bson:"id"`
 	Name           string           `json:"name" bson:"name"`
@@ -51,3 +59,10 @@ func (c ByCompany) Less(i, j int) bool {
 	return c[i].Name < c[j].Name
 }
 func (c ByCompany) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
+func (c *Company) Purge(date time.Time) {
+	for h, hol := range c.Holidays {
+		hol.Purge(date)
+		c.Holidays[h] = hol
+	}
+}

@@ -3,6 +3,7 @@ package teams
 import (
 	"sort"
 	"strings"
+	"time"
 
 	"github.com/erneap/go-models/sites"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -173,5 +174,12 @@ func (t *Team) DeleteSpecialtyType(id int) {
 	for c, cType := range t.SpecialtyTypes {
 		cType.SortID = c
 		t.SpecialtyTypes[c] = cType
+	}
+}
+
+func (t *Team) PurgeOldData(date time.Time) {
+	for c, co := range t.Companies {
+		co.Purge(date)
+		t.Companies[c] = co
 	}
 }
