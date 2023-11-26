@@ -73,3 +73,13 @@ func (e *EmployeeWorkRecord) RemoveWork(start, end time.Time) {
 		}
 	}
 }
+
+func (e *EmployeeWorkRecord) Purge(purge time.Time) {
+	sort.Sort(ByEmployeeWork(e.Work))
+
+	for i := len(e.Work) - 1; i >= 0; i-- {
+		if e.Work[i].DateWorked.Before(purge) {
+			e.Work = append(e.Work[:i], e.Work[i+1:]...)
+		}
+	}
+}

@@ -203,7 +203,8 @@ func AddLogEntry2(portion, category, title, msg string, emp *employees.Employee)
 			return err
 		}
 
-		logPath = path.Join(logPath, fmt.Sprintf("%s-%d.log", portion, chgDate.Year()))
+		logPath = path.Join(logPath, fmt.Sprintf("%s-%d.log", portion,
+			chgDate.Year()))
 
 		logEntry := &logs.LogEntry2{
 			EntryDate: chgDate,
