@@ -3,7 +3,7 @@ package soap
 import "strings"
 
 type Passage struct {
-	Version    string `json:"version" bson:"version"`
+	Version    string `json:"version,omitempty" bson:"version,omitempty"`
 	BookID     int    `json:"bookid" bson:"bookid"`
 	Book       string `json:"book" bson:"book"`
 	Chapter    int    `json:"chapter" bson:"chapter"`
