@@ -1,4 +1,4 @@
-package soap
+package plans
 
 type ReadingMonth struct {
 	Month int          `json:"month" bson:"month"`
