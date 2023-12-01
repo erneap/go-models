@@ -1,9 +1,9 @@
 package plans
 
 type ReadingDay struct {
-	Day       int             `json:"day" bson:"day"`
-	Passages  []bible.Passage `json:"passages,omitempty" bson:"passages,omitempty"`
-	Completed bool            `json:"completed" bson:"completed"`
+	Day       int       `json:"day" bson:"day"`
+	Passages  []Passage `json:"passages,omitempty" bson:"passages,omitempty"`
+	Completed bool      `json:"completed" bson:"completed"`
 }
 
 type ByReadingDay []ReadingDay
