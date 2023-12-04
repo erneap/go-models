@@ -9,6 +9,7 @@ import (
 type ReadingPlan struct {
 	UserID    primitive.ObjectID `json:"userid,omitempty" bson:"userid,omitempty"`
 	StartDate *time.Time         `json:"start,omitempty" bson:"start,omitempty"`
+	PlanID    primitive.ObjectID `json:"planid,omitempty" bson:"planid,omitempty"`
 	Months    []ReadingMonth     `json:"months,omitempty" bson:"months,omitempty"`
 }
 
