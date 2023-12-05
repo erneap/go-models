@@ -1,12 +1,14 @@
 package plans
 
 type Passage struct {
+	ID         int    `json:"id,omitempty" bson:"id,omitempty"`
 	BookID     int    `json:"bookid" bson:"bookid"`
 	Book       string `json:"book" bson:"book"`
 	Chapter    int    `json:"chapter" bson:"chapter"`
 	StartVerse int    `json:"startverse,omitempty" bson:"startverse,omitempty"`
 	EndVerse   int    `json:"endverse,omitempty" bson:"endverse,omitempty"`
 	Passage    string `json:"passage,omitempty" bson:"passage,omitempty"`
+	Completed  bool   `json:"completed,omitempty" bson:"completed"`
 }
 
 type ByPassage []Passage
