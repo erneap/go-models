@@ -39,10 +39,12 @@ func (bc *BibleChapter) IsComplete() bool {
 	return true
 }
 
-func (d *BibleChapter) AddPassage(bookid int, book string, chapter, start, end int) error {
+func (d *BibleChapter) AddPassage(bookid int, book string, chapter, start,
+	end int) (*plans.Passage, error) {
 	found := false
+	var answer *plans.Passage
 	if bookid == 0 || chapter == 0 {
-		return errors.New("not enough information to add passage")
+		return nil, errors.New("not enough information to add passage")
 	}
 	for p, psg := range d.Passages {
 		if psg.BookID == bookid && psg.Chapter == chapter {
@@ -52,10 +54,11 @@ func (d *BibleChapter) AddPassage(bookid int, book string, chapter, start, end i
 				psg.EndVerse = end
 				d.Passages[p] = psg
 			}
+			answer = &psg
 		}
 	}
 	if !found {
-		psg := &plans.Passage{
+		answer = &plans.Passage{
 			ID:         len(d.Passages) + 1,
 			BookID:     bookid,
 			Book:       book,
@@ -63,16 +66,19 @@ func (d *BibleChapter) AddPassage(bookid int, book string, chapter, start, end i
 			StartVerse: start,
 			EndVerse:   end,
 		}
-		d.Passages = append(d.Passages, *psg)
+
+		d.Passages = append(d.Passages, *answer)
 		sort.Sort(plans.ByPassage(d.Passages))
 	}
-	return nil
+	return answer, nil
 }
 
-func (d *BibleChapter) UpdatePassage(id int, field, value string) error {
+func (d *BibleChapter) UpdatePassage(id int, field,
+	value string) (*plans.Passage, error) {
 	found := false
+	var answer *plans.Passage
 	if id == 0 {
-		return errors.New("not enough information to add passage text")
+		return nil, errors.New("not enough information to add passage text")
 	}
 	for p, psg := range d.Passages {
 		if psg.ID == id {
@@ -81,7 +87,7 @@ func (d *BibleChapter) UpdatePassage(id int, field, value string) error {
 			case "bookid":
 				iValue, err := strconv.Atoi(value)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				psg.BookID = iValue
 			case "book":
@@ -89,19 +95,19 @@ func (d *BibleChapter) UpdatePassage(id int, field, value string) error {
 			case "chapter":
 				iValue, err := strconv.Atoi(value)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				psg.Chapter = iValue
 			case "startverse", "start":
 				iValue, err := strconv.Atoi(value)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				psg.StartVerse = iValue
 			case "endverse", "end":
 				iValue, err := strconv.Atoi(value)
 				if err != nil {
-					return err
+					return nil, err
 				}
 				psg.EndVerse = iValue
 			case "text":
@@ -110,12 +116,13 @@ func (d *BibleChapter) UpdatePassage(id int, field, value string) error {
 				psg.Completed = strings.EqualFold(value, "true")
 			}
 			d.Passages[p] = psg
+			answer = &psg
 		}
 	}
 	if !found {
-		return errors.New("passage not found")
+		return nil, errors.New("passage not found")
 	}
-	return nil
+	return answer, nil
 }
 
 func (d *BibleChapter) UpdatePassageText(id int, text string) error {
