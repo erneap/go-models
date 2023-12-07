@@ -94,9 +94,8 @@ func (lr *LeaveRequest) SetLeaveDays(emp *Employee, offset float64) {
 	} else if offset < 0 {
 		zoneID += fmt.Sprintf("%0.1f", offset)
 	}
-	timeZone := time.FixedZone(zoneID, int(offset*60*60))
 	sDate := time.Date(lr.StartDate.Year(), lr.StartDate.Month(),
-		lr.StartDate.Day(), 0, 0, 0, 0, timeZone)
+		lr.StartDate.Day(), 0, 0, 0, 0, time.UTC)
 	lr.RequestedDays = lr.RequestedDays[:0]
 	for sDate.Before(lr.EndDate) || sDate.Equal(lr.EndDate) {
 		wd := emp.GetWorkday(sDate, offset)
