@@ -166,3 +166,15 @@ func (d *BibleChapter) DeletePassage(id int) error {
 	}
 	return nil
 }
+
+type StandardBibleChapter struct {
+	ID     int `json:"id" bson:"id"`
+	Verses int `json:"verses" bson:"verses"`
+}
+type ByStandardBibleChapter []StandardBibleChapter
+
+func (c ByStandardBibleChapter) Len() int { return len(c) }
+func (c ByStandardBibleChapter) Less(i, j int) bool {
+	return c[i].ID < c[j].ID
+}
+func (c ByStandardBibleChapter) Swap(i, j int) { c[i], c[j] = c[j], c[i] }

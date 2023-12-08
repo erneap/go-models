@@ -163,3 +163,24 @@ func (b *Bible) RemovePassage(book string, chptr, start,
 	}
 	return passage, nil
 }
+
+type BibleStandards struct {
+	Books    []StandardBibleBook `json:"books,omitempty" bson:"books,omitempty"`
+	Versions []BibleVersion      `json:"versions" bson:"versions"`
+}
+
+type BibleVersion struct {
+	Code     string `json:"code" bson:"code"`
+	Title    string `json:"title" bson:"title"`
+	Language string `json:"language" bson:"language"`
+}
+type ByBibleVersion []BibleVersion
+
+func (c ByBibleVersion) Len() int { return len(c) }
+func (c ByBibleVersion) Less(i, j int) bool {
+	if strings.EqualFold(c[i].Language, c[j].Language) {
+		return strings.ToLower(c[i].Title) < strings.ToLower(c[j].Title)
+	}
+	return strings.ToLower(c[i].Language) < strings.ToLower(c[j].Language)
+}
+func (c ByBibleVersion) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
