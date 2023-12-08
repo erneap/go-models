@@ -2,6 +2,7 @@ package bible
 
 type BibleBook struct {
 	Id       int            `json:"id" bson:"id"`
+	Code     string         `json:"code,omitempty" bson:"code:omitempty"`
 	Title    string         `json:"title" bson:"title"`
 	Chapters []BibleChapter `json:"chapters,omitempty" bson:"chapter,omitempty"`
 }
