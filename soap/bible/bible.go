@@ -13,6 +13,7 @@ type Bible struct {
 	Id         primitive.ObjectID `json:"id" bson:"_id"`
 	Version    string             `json:"version,omitempty" bson:"version,omitempty"`
 	Name       string             `json:"name,omitempty" bson:"name,omitempty"`
+	Language   string             `json:"language,omitempty" bson:"language,omitempty"`
 	Testaments []Testament        `json:"Testaments" bson:"Testaments"`
 }
 
