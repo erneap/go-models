@@ -11,7 +11,7 @@ import (
 
 type ReadingPlan struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"id,omitempty"`
-	Title     string             `json:"title:omitempty" bson:"title,omitempty"`
+	Title     string             `json:"title,omitempty" bson:"title,omitempty"`
 	UserID    string             `json:"userid,omitempty" bson:"userid,omitempty"`
 	StartDate *time.Time         `json:"start,omitempty" bson:"start,omitempty"`
 	Periods   []ReadingPeriod    `json:"periods,omitempty" bson:"periods,omitempty"`
