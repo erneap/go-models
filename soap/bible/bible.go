@@ -42,7 +42,7 @@ func (b *Bible) AddPassage(book string, chptr, start, end int,
 	found := false
 	for tid, testament := range b.Testaments {
 		for bid, bk := range testament.Books {
-			if strings.EqualFold(bk.Title[:2], book[:2]) {
+			if strings.EqualFold(bk.Title, book) || strings.EqualFold(bk.Code, book) {
 				for c, ch := range bk.Chapters {
 					if ch.Id == chptr {
 						for p, psg := range ch.Passages {
@@ -139,7 +139,7 @@ func (b *Bible) GetPassageText(book string, chptr, start,
 	found := false
 	for _, testament := range b.Testaments {
 		for _, bk := range testament.Books {
-			if strings.EqualFold(bk.Title[:2], book[:2]) {
+			if strings.EqualFold(bk.Title, book) || strings.EqualFold(bk.Code, book) {
 				for _, ch := range bk.Chapters {
 					if ch.Id == chptr {
 						if start == 0 && len(ch.Passages) > 0 {
@@ -181,7 +181,7 @@ func (b *Bible) RemovePassage(book string, chptr, start,
 	var passage *plans.Passage
 	for tid, testament := range b.Testaments {
 		for i, bk := range testament.Books {
-			if strings.EqualFold(bk.Title[:2], book[:2]) {
+			if strings.EqualFold(bk.Title, book) || strings.EqualFold(bk.Code, book) {
 				for c, ch := range bk.Chapters {
 					if ch.Id == chptr {
 						pos := -1
