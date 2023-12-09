@@ -12,7 +12,7 @@ import (
 type ReadingPlan struct {
 	ID        primitive.ObjectID `json:"id,omitempty" bson:"id,omitempty"`
 	Title     string             `json:"title:omitempty" bson:"title,omitempty"`
-	UserID    primitive.ObjectID `json:"userid,omitempty" bson:"userid,omitempty"`
+	UserID    string             `json:"userid,omitempty" bson:"userid,omitempty"`
 	StartDate *time.Time         `json:"start,omitempty" bson:"start,omitempty"`
 	Periods   []ReadingPeriod    `json:"periods,omitempty" bson:"periods,omitempty"`
 }
@@ -21,10 +21,10 @@ type ByReadingPlan []ReadingPlan
 
 func (c ByReadingPlan) Len() int { return len(c) }
 func (c ByReadingPlan) Less(i, j int) bool {
-	if c[i].UserID.Hex() == c[j].UserID.Hex() {
+	if c[i].UserID == c[j].UserID {
 		return c[i].StartDate.Before(*c[j].StartDate)
 	}
-	return c[i].UserID.Hex() < c[j].UserID.Hex()
+	return c[i].UserID < c[j].UserID
 }
 func (c ByReadingPlan) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
