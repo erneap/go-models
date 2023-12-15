@@ -903,6 +903,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					req.RequestedDays = append(req.RequestedDays, lv)
 				}
 			case "comment", "addcomment":
+				fmt.Println("add comment")
 				newComment := &LeaveRequestComment{
 					CommentDate: time.Now().UTC(),
 					Comment:     value,
