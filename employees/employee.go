@@ -871,6 +871,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				message = "Leave Request: Leave Request unapproved.\n" +
 					"Comment: " + value
 			case "day", "requestday":
+				bApproved := strings.EqualFold(req.Status, "approved")
 				parts := strings.Split(value, "|")
 				lvDate, _ := time.Parse("2006-01-02", parts[0])
 				code := parts[1]
@@ -901,6 +902,31 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						RequestID: req.ID,
 					}
 					req.RequestedDays = append(req.RequestedDays, lv)
+				}
+				if bApproved {
+					found = false
+					for j, lv := range e.Leaves {
+						if lv.LeaveDate.Equal(lvDate) {
+							found = true
+							lv.Code = code
+							if code == "" {
+								lv.Hours = 0.0
+							} else {
+								lv.Hours = hours
+							}
+							e.Leaves[j] = lv
+						}
+					}
+					if !found && code != "" {
+						lv := &LeaveDay{
+							LeaveDate: lvDate,
+							Code:      code,
+							Hours:     hours,
+							Status:    req.Status,
+							RequestID: req.ID,
+						}
+						e.Leaves = append(e.Leaves, *lv)
+					}
 				}
 			case "comment", "addcomment":
 				newComment := &LeaveRequestComment{
