@@ -39,14 +39,13 @@ func (c ByUser) Less(i, j int) bool {
 func (c ByUser) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
 func (u *User) IsInGroup(app, group string) bool {
-	answer := false
+	name := fmt.Sprintf("%s-%s", app, group)
 	for _, perm := range u.Workgroups {
-		parts := strings.Split(perm, "-")
-		if strings.EqualFold(app, parts[0]) && strings.EqualFold(group, parts[1]) {
-			answer = true
+		if strings.EqualFold(perm, name) {
+			return true
 		}
 	}
-	return answer
+	return false
 }
 
 func (u *User) SetPassword(passwd string) error {
