@@ -39,7 +39,6 @@ func SendMail(to []string, subject, body string) error {
 		Password: config.Config("SMTP_PASS"),
 		From:     config.Config("SMTP_FROM"),
 	}
-	fmt.Println(smtpServer.Host)
 
 	err := smtpServer.Send(to, subject, body)
 	if err != nil {
