@@ -630,7 +630,7 @@ func (e *Employee) GetPTOHours(start, end time.Time) float64 {
 }
 
 func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
-	offset float64) {
+	offset float64, comment string) {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
@@ -642,6 +642,13 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		StartDate:   start,
 		EndDate:     end,
 		Status:      "DRAFT",
+	}
+	if comment != "" {
+		lrc := &LeaveRequestComment{
+			CommentDate: time.Now().UTC(),
+			Comment:     comment,
+		}
+		lr.Comments = append(lr.Comments, *lrc)
 	}
 	zoneID := "UTC"
 	if offset > 0 {
