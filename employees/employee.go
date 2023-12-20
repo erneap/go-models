@@ -634,69 +634,67 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
-	var answer *LeaveRequest
-	for _, lr := range e.Requests {
+	for l, lr := range e.Requests {
 		if lr.StartDate.Equal(start) && lr.EndDate.Equal(end) {
-			answer = &lr
 			if comment != "" {
 				lrc := &LeaveRequestComment{
 					CommentDate: time.Now().UTC(),
 					Comment:     comment,
 				}
-				answer.Comments = append(answer.Comments, *lrc)
+				lr.Comments = append(lr.Comments, *lrc)
+				e.Requests[l] = lr
 			}
+			return &lr
 		}
 	}
-	if answer == nil {
-		answer := &LeaveRequest{
-			ID:          primitive.NewObjectID().Hex(),
-			EmployeeID:  empID,
-			RequestDate: time.Now().UTC(),
-			PrimaryCode: code,
-			StartDate:   start,
-			EndDate:     end,
-			Status:      "DRAFT",
-		}
-		if comment != "" {
-			lrc := &LeaveRequestComment{
-				CommentDate: time.Now().UTC(),
-				Comment:     comment,
-			}
-			answer.Comments = append(answer.Comments, *lrc)
-		}
-		zoneID := "UTC"
-		if offset > 0 {
-			zoneID += "+" + fmt.Sprintf("%0.1f", offset)
-		} else if offset < 0 {
-			zoneID += fmt.Sprintf("%0.1f", offset)
-		}
-		sDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
-			time.UTC)
-		std := e.GetStandardWorkday(sDate)
-		for sDate.Before(end) || sDate.Equal(end) {
-			wd := e.GetWorkday(sDate, offset)
-			if wd.Code != "" {
-				hours := wd.Hours
-				if hours == 0.0 {
-					hours = std
-				}
-				if code == "H" {
-					hours = 8.0
-				}
-				lv := LeaveDay{
-					LeaveDate: sDate,
-					Code:      code,
-					Hours:     hours,
-					Status:    "DRAFT",
-					RequestID: answer.ID,
-				}
-				answer.RequestedDays = append(answer.RequestedDays, lv)
-			}
-			sDate = sDate.AddDate(0, 0, 1)
-		}
-		e.Requests = append(e.Requests, *answer)
-		sort.Sort(ByLeaveRequest(e.Requests))
+	answer := &LeaveRequest{
+		ID:          primitive.NewObjectID().Hex(),
+		EmployeeID:  empID,
+		RequestDate: time.Now().UTC(),
+		PrimaryCode: code,
+		StartDate:   start,
+		EndDate:     end,
+		Status:      "DRAFT",
 	}
+	if comment != "" {
+		lrc := &LeaveRequestComment{
+			CommentDate: time.Now().UTC(),
+			Comment:     comment,
+		}
+		answer.Comments = append(answer.Comments, *lrc)
+	}
+	zoneID := "UTC"
+	if offset > 0 {
+		zoneID += "+" + fmt.Sprintf("%0.1f", offset)
+	} else if offset < 0 {
+		zoneID += fmt.Sprintf("%0.1f", offset)
+	}
+	sDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
+		time.UTC)
+	std := e.GetStandardWorkday(sDate)
+	for sDate.Before(end) || sDate.Equal(end) {
+		wd := e.GetWorkday(sDate, offset)
+		if wd.Code != "" {
+			hours := wd.Hours
+			if hours == 0.0 {
+				hours = std
+			}
+			if code == "H" {
+				hours = 8.0
+			}
+			lv := LeaveDay{
+				LeaveDate: sDate,
+				Code:      code,
+				Hours:     hours,
+				Status:    "DRAFT",
+				RequestID: answer.ID,
+			}
+			answer.RequestedDays = append(answer.RequestedDays, lv)
+		}
+		sDate = sDate.AddDate(0, 0, 1)
+	}
+	e.Requests = append(e.Requests, *answer)
+	sort.Sort(ByLeaveRequest(e.Requests))
 	return answer
 }
 
