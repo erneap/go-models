@@ -638,10 +638,17 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 	for _, lr := range e.Requests {
 		if lr.StartDate.Equal(start) && lr.EndDate.Equal(end) {
 			answer = &lr
+			if comment != "" {
+				lrc := &LeaveRequestComment{
+					CommentDate: time.Now().UTC(),
+					Comment:     comment,
+				}
+				answer.Comments = append(answer.Comments, *lrc)
+			}
 		}
 	}
 	if answer == nil {
-		answer := LeaveRequest{
+		answer := &LeaveRequest{
 			ID:          primitive.NewObjectID().Hex(),
 			EmployeeID:  empID,
 			RequestDate: time.Now().UTC(),
@@ -687,7 +694,7 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 			}
 			sDate = sDate.AddDate(0, 0, 1)
 		}
-		e.Requests = append(e.Requests, answer)
+		e.Requests = append(e.Requests, *answer)
 		sort.Sort(ByLeaveRequest(e.Requests))
 	}
 	return answer
@@ -1006,8 +1013,8 @@ func (e *Employee) DeleteLeaveRequest(request string) (string, error) {
 		if req.ID == request {
 			pos = i
 			message = fmt.Sprintf("Deleted Leave Request for %s, Dates: %s to %s ",
-				e.Name.GetLastFirst(), req.StartDate.Format("2006-Jan-02"),
-				req.EndDate.Format("2006-Jan-02"))
+				e.Name.GetLastFirst(), req.StartDate.Format("01/02/06"),
+				req.EndDate.Format("01/02/06"))
 		}
 	}
 	if pos < 0 {
