@@ -630,58 +630,67 @@ func (e *Employee) GetPTOHours(start, end time.Time) float64 {
 }
 
 func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
-	offset float64, comment string) {
+	offset float64, comment string) *LeaveRequest {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
-	lr := LeaveRequest{
-		ID:          primitive.NewObjectID().Hex(),
-		EmployeeID:  empID,
-		RequestDate: time.Now().UTC(),
-		PrimaryCode: code,
-		StartDate:   start,
-		EndDate:     end,
-		Status:      "DRAFT",
-	}
-	if comment != "" {
-		lrc := &LeaveRequestComment{
-			CommentDate: time.Now().UTC(),
-			Comment:     comment,
+	var answer *LeaveRequest
+	for _, lr := range e.Requests {
+		if lr.StartDate.Equal(start) && lr.EndDate.Equal(end) {
+			answer = &lr
 		}
-		lr.Comments = append(lr.Comments, *lrc)
 	}
-	zoneID := "UTC"
-	if offset > 0 {
-		zoneID += "+" + fmt.Sprintf("%0.1f", offset)
-	} else if offset < 0 {
-		zoneID += fmt.Sprintf("%0.1f", offset)
-	}
-	sDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
-		time.UTC)
-	std := e.GetStandardWorkday(sDate)
-	for sDate.Before(end) || sDate.Equal(end) {
-		wd := e.GetWorkday(sDate, offset)
-		if wd.Code != "" {
-			hours := wd.Hours
-			if hours == 0.0 {
-				hours = std
-			}
-			if code == "H" {
-				hours = 8.0
-			}
-			lv := LeaveDay{
-				LeaveDate: sDate,
-				Code:      code,
-				Hours:     hours,
-				Status:    "DRAFT",
-				RequestID: lr.ID,
-			}
-			lr.RequestedDays = append(lr.RequestedDays, lv)
+	if answer == nil {
+		answer := LeaveRequest{
+			ID:          primitive.NewObjectID().Hex(),
+			EmployeeID:  empID,
+			RequestDate: time.Now().UTC(),
+			PrimaryCode: code,
+			StartDate:   start,
+			EndDate:     end,
+			Status:      "DRAFT",
 		}
-		sDate = sDate.AddDate(0, 0, 1)
+		if comment != "" {
+			lrc := &LeaveRequestComment{
+				CommentDate: time.Now().UTC(),
+				Comment:     comment,
+			}
+			answer.Comments = append(answer.Comments, *lrc)
+		}
+		zoneID := "UTC"
+		if offset > 0 {
+			zoneID += "+" + fmt.Sprintf("%0.1f", offset)
+		} else if offset < 0 {
+			zoneID += fmt.Sprintf("%0.1f", offset)
+		}
+		sDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
+			time.UTC)
+		std := e.GetStandardWorkday(sDate)
+		for sDate.Before(end) || sDate.Equal(end) {
+			wd := e.GetWorkday(sDate, offset)
+			if wd.Code != "" {
+				hours := wd.Hours
+				if hours == 0.0 {
+					hours = std
+				}
+				if code == "H" {
+					hours = 8.0
+				}
+				lv := LeaveDay{
+					LeaveDate: sDate,
+					Code:      code,
+					Hours:     hours,
+					Status:    "DRAFT",
+					RequestID: answer.ID,
+				}
+				answer.RequestedDays = append(answer.RequestedDays, lv)
+			}
+			sDate = sDate.AddDate(0, 0, 1)
+		}
+		e.Requests = append(e.Requests, answer)
+		sort.Sort(ByLeaveRequest(e.Requests))
 	}
-	e.Requests = append(e.Requests, lr)
-	sort.Sort(ByLeaveRequest(e.Requests))
+	return answer
 }
 
 func (e *Employee) UpdateLeaveRequest(request, field, value string,
@@ -690,11 +699,8 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 		e.ConvertFromData()
 	}
 	message := ""
-	var lr *LeaveRequest
-	lr = nil
 	for i, req := range e.Requests {
 		if req.ID == request {
-			lr = &req
 			switch strings.ToLower(field) {
 			case "startdate", "start":
 				lvDate, err := time.Parse("2006-01-02", value)
@@ -943,9 +949,10 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				req.Comments = append(req.Comments, *newComment)
 			}
 			e.Requests[i] = req
+			return message, &req, nil
 		}
 	}
-	return message, lr, nil
+	return "", nil, errors.New("not found")
 }
 
 func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
@@ -989,7 +996,8 @@ func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
 	sort.Sort(ByLeaveDay(e.Leaves))
 }
 
-func (e *Employee) DeleteLeaveRequest(request string) error {
+func (e *Employee) DeleteLeaveRequest(request string) (string, error) {
+	message := ""
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
@@ -997,10 +1005,13 @@ func (e *Employee) DeleteLeaveRequest(request string) error {
 	for i, req := range e.Requests {
 		if req.ID == request {
 			pos = i
+			message = fmt.Sprintf("Deleted Leave Request for %s, Dates: %s to %s ",
+				e.Name.GetLastFirst(), req.StartDate.Format("2006-Jan-02"),
+				req.EndDate.Format("2006-Jan-02"))
 		}
 	}
 	if pos < 0 {
-		return errors.New("request not found")
+		return "", errors.New("request not found")
 	}
 	e.Requests = append(e.Requests[:pos], e.Requests[pos+1:]...)
 	// delete all leaves associated with this leave request, except if the leave
@@ -1018,7 +1029,7 @@ func (e *Employee) DeleteLeaveRequest(request string) error {
 				e.Leaves[deletes[i]+1:]...)
 		}
 	}
-	return nil
+	return message, nil
 }
 
 func (e *Employee) HasLaborCode(chargeNumber, extension string) bool {
