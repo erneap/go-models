@@ -14,24 +14,25 @@ import (
 )
 
 type Employee struct {
-	ID          primitive.ObjectID  `json:"id" bson:"_id"`
-	TeamID      primitive.ObjectID  `json:"team" bson:"team"`
-	SiteID      string              `json:"site" bson:"site"`
-	UserID      primitive.ObjectID  `json:"userid" bson:"userid"`
-	Email       string              `json:"email" bson:"email"`
-	Name        EmployeeName        `json:"name" bson:"name"`
-	Data        *EmployeeData       `json:"data,omitempty" bson:"data,omitempty"`
-	CompanyInfo CompanyInfo         `json:"companyinfo"`
-	Assignments []Assignment        `json:"assignments,omitempty"`
-	Variations  []Variation         `json:"variations,omitempty"`
-	Balances    []AnnualLeave       `json:"balance,omitempty"`
-	Leaves      []LeaveDay          `json:"leaves,omitempty"`
-	Requests    []LeaveRequest      `json:"requests,omitempty"`
-	LaborCodes  []EmployeeLaborCode `json:"laborCodes,omitempty"`
-	User        *users.User         `json:"user,omitempty" bson:"-"`
-	Work        []Work              `json:"work,omitempty" bson:"-"`
-	ContactInfo []Contact           `json:"contactinfo,omitempty" bson:"contactinfo,omitempty"`
-	Specialties []Specialty         `json:"specialties,omitempty" bson:"specialties,omitempty"`
+	ID             primitive.ObjectID  `json:"id" bson:"_id"`
+	TeamID         primitive.ObjectID  `json:"team" bson:"team"`
+	SiteID         string              `json:"site" bson:"site"`
+	UserID         primitive.ObjectID  `json:"userid" bson:"userid"`
+	Email          string              `json:"email" bson:"email"`
+	Name           EmployeeName        `json:"name" bson:"name"`
+	Data           *EmployeeData       `json:"data,omitempty" bson:"data,omitempty"`
+	CompanyInfo    CompanyInfo         `json:"companyinfo"`
+	Assignments    []Assignment        `json:"assignments,omitempty"`
+	Variations     []Variation         `json:"variations,omitempty"`
+	Balances       []AnnualLeave       `json:"balance,omitempty"`
+	Leaves         []LeaveDay          `json:"leaves,omitempty"`
+	Requests       []LeaveRequest      `json:"requests,omitempty"`
+	LaborCodes     []EmployeeLaborCode `json:"laborCodes,omitempty"`
+	User           *users.User         `json:"user,omitempty" bson:"-"`
+	Work           []Work              `json:"work,omitempty" bson:"-"`
+	ContactInfo    []Contact           `json:"contactinfo,omitempty" bson:"contactinfo,omitempty"`
+	Specialties    []Specialty         `json:"specialties,omitempty" bson:"specialties,omitempty"`
+	EmailAddresses []string            `json:"emails,omitempty" bson:"emails,omitempty"`
 }
 
 type ByEmployees []Employee
@@ -1375,6 +1376,31 @@ func (e *Employee) HasSpecialty(spec int) bool {
 		}
 	}
 	return answer
+}
+
+func (e *Employee) AddEmailAddress(email string) {
+	found := false
+	for _, em := range e.EmailAddresses {
+		if strings.EqualFold(em, email) {
+			found = true
+		}
+	}
+	if !found {
+		e.EmailAddresses = append(e.EmailAddresses, email)
+		sort.Strings(e.EmailAddresses)
+	}
+}
+
+func (e *Employee) RemoveEmailAddress(email string) {
+	found := -1
+	for e, em := range e.EmailAddresses {
+		if strings.EqualFold(em, email) {
+			found = e
+		}
+	}
+	if found >= 0 {
+		e.EmailAddresses = append(e.EmailAddresses[:found], e.EmailAddresses[found+1:]...)
+	}
 }
 
 type EmployeeCompareCode struct {
