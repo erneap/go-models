@@ -392,6 +392,21 @@ func (e *Employee) RemoveAssignment(id uint) {
 	}
 }
 
+func (e *Employee) IsPrimaryCode(date time.Time, chgno, ext string) bool {
+	answer := false
+	for _, asgmt := range e.Assignments {
+		if asgmt.UseAssignment(e.SiteID, date) {
+			for _, lc := range asgmt.LaborCodes {
+				if strings.EqualFold(chgno, lc.ChargeNumber) &&
+					strings.EqualFold(ext, lc.Extension) {
+					answer = true
+				}
+			}
+		}
+	}
+	return answer
+}
+
 func (e *Employee) PurgeOldData(date time.Time) bool {
 	if e.Data != nil {
 		e.ConvertFromData()
