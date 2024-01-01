@@ -397,6 +397,7 @@ func (e *Employee) IsPrimaryCode(date time.Time, chgno, ext string) bool {
 	for _, asgmt := range e.Assignments {
 		if asgmt.UseAssignment(e.SiteID, date) {
 			for _, lc := range asgmt.LaborCodes {
+				fmt.Printf("Name: %s - Request: %s, %s - Asgmt: %s, %s\n", e.Name.LastName, chgno, ext, lc.ChargeNumber, lc.Extension)
 				if strings.EqualFold(chgno, lc.ChargeNumber) &&
 					strings.EqualFold(ext, lc.Extension) {
 					answer = true
