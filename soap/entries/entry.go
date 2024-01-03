@@ -25,6 +25,7 @@ func (e *SoapEntry) IsEntry(date time.Time) bool {
 }
 
 type SoapScriptureEntry struct {
+	Version string `json:"version" bson:"version"`
 	Book    string `json:"book" bson:"book"`
 	Chapter int    `json:"chapter" bson:"chapter"`
 	Verses  string `json:"verses" bson:"verses"`
