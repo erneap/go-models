@@ -1,4 +1,4 @@
-package bible
+package bibles
 
 import "strings"
 

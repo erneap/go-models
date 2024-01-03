@@ -1,4 +1,4 @@
-package bible
+package bibles
 
 type Testament struct {
 	Code  string      `json:"code" bson:"code"`
