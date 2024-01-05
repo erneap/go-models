@@ -56,7 +56,7 @@ func (b *Bible) AddPassage(book string, chptr, start, end int,
 						if !found {
 							psg := &plans.Passage{
 								ID:         len(ch.Passages) + 1,
-								BookID:     bk.Id,
+								BookID:     bk.BookId,
 								Book:       book,
 								Chapter:    chptr,
 								StartVerse: start,
@@ -78,7 +78,7 @@ func (b *Bible) AddPassage(book string, chptr, start, end int,
 					}
 					psg := &plans.Passage{
 						ID:         len(ch.Passages) + 1,
-						BookID:     bk.Id,
+						BookID:     bk.BookId,
 						Book:       book,
 						Chapter:    chptr,
 						StartVerse: start,
@@ -97,16 +97,16 @@ func (b *Bible) AddPassage(book string, chptr, start, end int,
 		}
 		if !found {
 			bk := &BibleBook{
-				Id:    len(testament.Books) + 1,
-				Code:  strings.ToLower(book[:2]),
-				Title: book,
+				BookId: len(testament.Books) + 1,
+				Code:   strings.ToLower(book[:2]),
+				Title:  book,
 			}
 			ch := &BibleChapter{
 				Id: chptr,
 			}
 			psg := &plans.Passage{
 				ID:         len(ch.Passages) + 1,
-				BookID:     bk.Id,
+				BookID:     bk.BookId,
 				Book:       book,
 				Chapter:    chptr,
 				StartVerse: start,

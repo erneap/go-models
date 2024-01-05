@@ -3,7 +3,7 @@ package bibles
 type Testament struct {
 	Code  string      `json:"code" bson:"code"`
 	Title string      `json:"title" bson:"title"`
-	Books []BibleBook `json:"books" bson:"books"`
+	Books []BibleBook `json:"books" bson:"_"`
 }
 
 type ByTestament []Testament

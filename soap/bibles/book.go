@@ -1,19 +1,26 @@
 package bibles
 
-import "strings"
+import (
+	"strings"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
+)
 
 type BibleBook struct {
-	Id       int            `json:"id" bson:"id"`
-	Code     string         `json:"code,omitempty" bson:"code:omitempty"`
-	Title    string         `json:"title" bson:"title"`
-	Chapters []BibleChapter `json:"chapters,omitempty" bson:"chapter,omitempty"`
+	Id        primitive.ObjectID `json:"-" bson:"_id"`
+	BookId    int                `json:"id" bson:"bookid"`
+	Version   string             `json:"-" bson:"version"`
+	Testament string             `json:"-" bson:"testament"`
+	Code      string             `json:"code,omitempty" bson:"code:omitempty"`
+	Title     string             `json:"title" bson:"title"`
+	Chapters  []BibleChapter     `json:"chapters,omitempty" bson:"chapter,omitempty"`
 }
 
 type ByBibleBook []BibleBook
 
 func (c ByBibleBook) Len() int { return len(c) }
 func (c ByBibleBook) Less(i, j int) bool {
-	return c[i].Id < c[j].Id
+	return c[i].BookId < c[j].BookId
 }
 func (c ByBibleBook) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
