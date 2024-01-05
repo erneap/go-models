@@ -27,3 +27,7 @@ func (c ByPassage) Less(i, j int) bool {
 	return c[i].BookID < c[j].BookID
 }
 func (c ByPassage) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
+func (p *Passage) ResetPassage() {
+	p.Completed = false
+}

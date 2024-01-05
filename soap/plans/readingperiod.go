@@ -3,6 +3,7 @@ package plans
 import (
 	"errors"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -70,7 +71,8 @@ func (m *ReadingPeriod) UpdateReadingDay(day, id int, field, value string) error
 	for d, rday := range m.Days {
 		if rday.Day == day {
 			found = true
-			if strings.ToLower(field) == "sort" {
+			switch strings.ToLower(field) {
+			case "sortdays":
 				if strings.ToLower(value) == "up" && d > 0 {
 					temp := rday.Day
 					rday.Day = m.Days[d-1].Day
@@ -80,7 +82,26 @@ func (m *ReadingPeriod) UpdateReadingDay(day, id int, field, value string) error
 					rday.Day = m.Days[d+1].Day
 					m.Days[d+1].Day = temp
 				}
-			} else {
+			case "addpassage":
+				parts := strings.Split(value, "|")
+				book := ""
+				chapter := 0
+				start := 0
+				end := 0
+				if len(parts) > 0 {
+					book = parts[0]
+				}
+				if len(parts) > 1 {
+					chapter, _ = strconv.Atoi(parts[1])
+				}
+				if len(parts) > 3 {
+					start, _ = strconv.Atoi(parts[2])
+					end, _ = strconv.Atoi(parts[3])
+				}
+				rday.AddPassage(id, book, chapter, start, end)
+			case "deletepassage":
+				rday.DeletePassage(id)
+			default:
 				err := rday.UpdatePassage(id, field, value)
 				if err != nil {
 					return err
@@ -110,4 +131,11 @@ func (m *ReadingPeriod) DeleteReadingDay(day int) error {
 	}
 	m.Days = append(m.Days[:pos], m.Days[pos+1:]...)
 	return nil
+}
+
+func (m *ReadingPeriod) ResetPeriod() {
+	for d, rday := range m.Days {
+		rday.ResetDay()
+		m.Days[d] = rday
+	}
 }

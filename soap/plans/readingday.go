@@ -141,3 +141,10 @@ func (d *ReadingDay) DeletePassage(id int) error {
 	}
 	return nil
 }
+
+func (d *ReadingDay) ResetDay() {
+	for p, psg := range d.Passages {
+		psg.ResetPassage()
+		d.Passages[p] = psg
+	}
+}

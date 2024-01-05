@@ -3,6 +3,7 @@ package plans
 import (
 	"errors"
 	"sort"
+	"strconv"
 	"strings"
 	"time"
 
@@ -58,7 +59,8 @@ func (p *ReadingPlan) UpdatePeriod(prdid, day, id int, field, value string) erro
 	for i, prd := range p.Periods {
 		if prd.ID == prdid {
 			found = true
-			if strings.ToLower(field) == "sort" && day == 0 {
+			switch strings.ToLower(field) {
+			case "sortperiods":
 				if strings.ToLower(value) == "up" && i > 0 {
 					temp := prd.ID
 					prd.ID = p.Periods[i-1].ID
@@ -68,7 +70,26 @@ func (p *ReadingPlan) UpdatePeriod(prdid, day, id int, field, value string) erro
 					prd.ID = p.Periods[i+1].ID
 					p.Periods[i+1].ID = temp
 				}
-			} else {
+			case "addday":
+				parts := strings.Split(value, "|")
+				book := ""
+				chapter := 0
+				start := 0
+				end := 0
+				if len(parts) > 0 {
+					book = parts[0]
+				}
+				if len(parts) > 1 {
+					chapter, _ = strconv.Atoi(parts[1])
+				}
+				if len(parts) > 3 {
+					start, _ = strconv.Atoi(parts[2])
+					end, _ = strconv.Atoi(parts[3])
+				}
+				prd.AddReadingDay(day, id, book, chapter, start, end)
+			case "deleteday":
+				prd.DeleteReadingDay(day)
+			default:
 				err := prd.UpdateReadingDay(day, id, field, value)
 				if err != nil {
 					return err
@@ -100,4 +121,11 @@ func (p *ReadingPlan) DeletePeriod(id int) error {
 		p.Periods[i] = prd
 	}
 	return nil
+}
+
+func (p *ReadingPlan) ResetReadingPlan() {
+	for m, prd := range p.Periods {
+		prd.ResetPeriod()
+		p.Periods[m] = prd
+	}
 }
