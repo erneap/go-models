@@ -11,7 +11,7 @@ type BibleBook struct {
 	BookId    int                `json:"id" bson:"bookid"`
 	Version   string             `json:"-" bson:"version"`
 	Testament string             `json:"-" bson:"testament"`
-	Code      string             `json:"code,omitempty" bson:"code:omitempty"`
+	Code      string             `json:"code,omitempty" bson:"code,omitempty"`
 	Title     string             `json:"title" bson:"title"`
 	Chapters  []BibleChapter     `json:"chapters,omitempty" bson:"chapter,omitempty"`
 }
