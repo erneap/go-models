@@ -215,10 +215,11 @@ type BibleStandards struct {
 }
 
 type BibleLanguage struct {
-	Code     string         `json:"code" bson:"_id"`
-	Title    string         `json:"title" bson:"title"`
-	Versions []BibleVersion `json:"versions,omitempty" bson:"-"`
-	Bibles   []Bible        `json:"bibles,omitempty" bson:"-"`
+	ID       primitive.ObjectID `json:"-" bson:"_id"`
+	Code     string             `json:"code" bson:"code"`
+	Title    string             `json:"title" bson:"title"`
+	Versions []BibleVersion     `json:"versions,omitempty" bson:"-"`
+	Bibles   []Bible            `json:"bibles,omitempty" bson:"-"`
 }
 type ByBibleLanguage []BibleLanguage
 
