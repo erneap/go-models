@@ -215,9 +215,9 @@ type BibleStandards struct {
 }
 
 type BibleLanguage struct {
-	Code     string         `json:"code" bson:"code"`
+	Code     string         `json:"code" bson:"_id"`
 	Title    string         `json:"title" bson:"title"`
-	Versions []BibleVersion `json:"versions" bson:"versions"`
+	Versions []BibleVersion `json:"versions" bson:"-"`
 }
 type ByBibleLanguage []BibleLanguage
 
