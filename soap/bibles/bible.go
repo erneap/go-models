@@ -218,6 +218,7 @@ type BibleLanguage struct {
 	Code     string         `json:"code" bson:"_id"`
 	Title    string         `json:"title" bson:"title"`
 	Versions []BibleVersion `json:"versions" bson:"-"`
+	Bibles   []Bible        `json:"bibles,omitempty" bson:"-"`
 }
 type ByBibleLanguage []BibleLanguage
 
