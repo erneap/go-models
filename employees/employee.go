@@ -166,7 +166,7 @@ func (e *Employee) AtSite(site string, start, end time.Time) bool {
 	return answer
 }
 
-func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
+func (e *Employee) GetWorkday(date, lastWork time.Time) *Workday {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
@@ -178,7 +178,6 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 			stdWorkDay = asgmt.GetStandardWorkday()
 		}
 	}
-	lastWork := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	var siteid string = ""
 	for _, wk := range e.Work {
 		if wk.DateWorked.Year() == date.Year() &&
@@ -186,16 +185,12 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 			wk.DateWorked.Day() == date.Day() {
 			work += wk.Hours
 		}
-		if wk.DateWorked.After(lastWork) {
-			lastWork = time.Date(wk.DateWorked.Year(), wk.DateWorked.Month(),
-				wk.DateWorked.Day(), 0, 0, 0, 0, time.UTC)
-		}
 	}
 	for _, asgmt := range e.Assignments {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
 			siteid = asgmt.Site
-			wkday = asgmt.GetWorkday(date, offset)
+			wkday = asgmt.GetWorkday(date)
 		}
 	}
 	for _, vari := range e.Variations {
@@ -209,10 +204,6 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 	}
 
 	for _, lv := range e.Leaves {
-		if lv.LeaveDate.Hour() != 0 {
-			delta := time.Hour * time.Duration(offset)
-			lv.LeaveDate = lv.LeaveDate.Add(delta)
-		}
 		if lv.LeaveDate.Year() == date.Year() &&
 			lv.LeaveDate.Month() == date.Month() &&
 			lv.LeaveDate.Day() == date.Day() &&
@@ -228,7 +219,7 @@ func (e *Employee) GetWorkday(date time.Time, offset float64) *Workday {
 	return wkday
 }
 
-func (e *Employee) GetWorkdayActual(date time.Time, offset float64) *Workday {
+func (e *Employee) GetWorkdayActual(date time.Time) *Workday {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
@@ -238,7 +229,7 @@ func (e *Employee) GetWorkdayActual(date time.Time, offset float64) *Workday {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
 			siteid = asgmt.Site
-			wkday = asgmt.GetWorkday(date, offset)
+			wkday = asgmt.GetWorkday(date)
 		}
 	}
 	for _, vari := range e.Variations {
@@ -272,7 +263,7 @@ func (e *Employee) GetWorkdayActual(date time.Time, offset float64) *Workday {
 	return wkday
 }
 
-func (e *Employee) GetWorkdayWOLeave(date time.Time, offset float64) *Workday {
+func (e *Employee) GetWorkdayWOLeave(date time.Time) *Workday {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
@@ -282,7 +273,7 @@ func (e *Employee) GetWorkdayWOLeave(date time.Time, offset float64) *Workday {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
 			siteid = asgmt.Site
-			wkday = asgmt.GetWorkday(date, offset)
+			wkday = asgmt.GetWorkday(date)
 		}
 	}
 	for _, vari := range e.Variations {
@@ -298,6 +289,7 @@ func (e *Employee) GetStandardWorkday(date time.Time) float64 {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
+	lastWork := time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
 	answer := 8.0
 	count := 0
 	start := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0,
@@ -310,7 +302,7 @@ func (e *Employee) GetStandardWorkday(date time.Time) float64 {
 		end = end.AddDate(0, 0, 1)
 	}
 	for start.Before(end) || start.Equal(end) {
-		wd := e.GetWorkday(start, 0.0)
+		wd := e.GetWorkday(start, lastWork)
 		if wd != nil && wd.Code != "" {
 			count++
 		}
@@ -689,7 +681,7 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 		time.UTC)
 	std := e.GetStandardWorkday(sDate)
 	for sDate.Before(end) || sDate.Equal(end) {
-		wd := e.GetWorkday(sDate, offset)
+		wd := e.GetWorkday(sDate, start)
 		if wd.Code != "" {
 			hours := wd.Hours
 			if hours == 0.0 {
@@ -763,7 +755,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				}
 				req.StartDate = lvDate
 				// reset the leave dates
-				req.SetLeaveDays(e, offset)
+				req.SetLeaveDays(e)
 				if req.Status == "APPROVED" {
 					e.ChangeApprovedLeaveDates(req)
 				}
@@ -807,7 +799,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				}
 				req.EndDate = lvDate
 				// reset the leave dates
-				req.SetLeaveDays(e, offset)
+				req.SetLeaveDays(e)
 				if req.Status == "APPROVED" {
 					e.ChangeApprovedLeaveDates(req)
 				}
@@ -865,7 +857,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					0, 0, 0, time.UTC)
 				req.EndDate = time.Date(end.Year(), end.Month(), end.Day(), 0, 0, 0, 0,
 					time.UTC)
-				req.SetLeaveDays(e, offset)
+				req.SetLeaveDays(e)
 				if req.Status == "APPROVED" {
 					e.ChangeApprovedLeaveDates(req)
 				}
@@ -1108,7 +1100,7 @@ func (e *Employee) GetAssignment(start, end time.Time) (string, string) {
 	current := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
 		time.UTC)
 	for current.Before(end) {
-		wd := e.GetWorkdayWOLeave(current, 0.0)
+		wd := e.GetWorkdayWOLeave(current)
 		if wd != nil {
 			label := wd.Workcenter + "-" + wd.Code
 			if label != "-" {
@@ -1219,7 +1211,7 @@ func (e *Employee) GetForecastHours(lCode labor.LaborCode,
 			if hours == 0.0 {
 				if current.Equal(lCode.StartDate) || current.Equal(lCode.EndDate) ||
 					(current.After(lCode.StartDate) && current.Before(lCode.EndDate)) {
-					wd := e.GetWorkday(current, offset)
+					wd := e.GetWorkday(current, lastWork)
 					if wd != nil && wd.Code != "" {
 						for _, wc := range workcodes {
 							if strings.EqualFold(wc.Code, wd.Code) && !wc.IsLeave {

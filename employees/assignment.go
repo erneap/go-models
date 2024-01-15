@@ -2,7 +2,6 @@ package employees
 
 import (
 	"errors"
-	"fmt"
 	"math"
 	"sort"
 	"strings"
@@ -50,17 +49,9 @@ func (a *Assignment) GetStandardWorkday() float64 {
 	return weekhours / float64(count)
 }
 
-func (a *Assignment) GetWorkday(date time.Time, offset float64) *Workday {
-	// get the site utc offset
-	zoneID := "UTC"
-	if offset > 0 {
-		zoneID += "+" + fmt.Sprintf("%0.1f", offset)
-	} else if offset < 0 {
-		zoneID += fmt.Sprintf("%0.1f", offset)
-	}
-	timeZone := time.FixedZone(zoneID, int(offset*60*60))
+func (a *Assignment) GetWorkday(date time.Time) *Workday {
 	start := time.Date(a.StartDate.Year(), a.StartDate.Month(), a.StartDate.Day(),
-		0, 0, 0, 0, timeZone)
+		0, 0, 0, 0, time.UTC)
 	for start.Weekday() != time.Sunday {
 		start = start.AddDate(0, 0, -1)
 	}
