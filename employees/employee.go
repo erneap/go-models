@@ -200,6 +200,16 @@ func (e *Employee) GetWorkday(date, lastWork time.Time) *Workday {
 		}
 	}
 	if work > 0.0 {
+		for wkday == nil {
+			date = date.AddDate(0, 0, -1)
+			for _, asgmt := range e.Assignments {
+				if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
+					(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
+					siteid = asgmt.Site
+					wkday = asgmt.GetWorkday(date)
+				}
+			}
+		}
 		return wkday
 	}
 	if date.Equal(lastWork) || date.Before(lastWork) {
