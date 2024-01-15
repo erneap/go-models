@@ -200,8 +200,7 @@ func (e *Employee) GetWorkday(date, lastWork time.Time) *Workday {
 		}
 	}
 	if work > 0.0 {
-		fmt.Println(wkday)
-		for wkday == nil {
+		for wkday == nil || wkday.Code == "" {
 			date = date.AddDate(0, 0, -1)
 			for _, asgmt := range e.Assignments {
 				if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
