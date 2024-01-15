@@ -202,9 +202,7 @@ func (e *Employee) GetWorkday(date, lastWork time.Time) *Workday {
 	if work > 0.0 {
 		return wkday
 	}
-	if (date.Equal(lastWork) || date.Before(lastWork)) && work <= 0.0 {
-		return nil
-	}
+	wkday = nil
 
 	for _, lv := range e.Leaves {
 		if lv.LeaveDate.Year() == date.Year() &&
