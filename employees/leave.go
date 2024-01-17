@@ -91,8 +91,8 @@ func (lr *LeaveRequest) SetLeaveDays(emp *Employee) {
 		lr.StartDate.Day(), 0, 0, 0, 0, time.UTC)
 	lr.RequestedDays = lr.RequestedDays[:0]
 	for sDate.Before(lr.EndDate) || sDate.Equal(lr.EndDate) {
-		wd := emp.GetWorkday(sDate, lr.StartDate)
-		if wd.Code != "" {
+		wd := emp.GetWorkday(sDate, lr.StartDate.AddDate(0, 0, -1))
+		if wd != nil && wd.Code != "" {
 			hours := wd.Hours
 			if lr.PrimaryCode == "H" {
 				hours = 8.0
