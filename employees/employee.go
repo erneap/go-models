@@ -692,9 +692,8 @@ func (e *Employee) NewLeaveRequest(empID, code string, start, end time.Time,
 	sDate := time.Date(start.Year(), start.Month(), start.Day(), 0, 0, 0, 0,
 		time.UTC)
 	std := e.GetStandardWorkday(sDate)
-	fmt.Printf("Start %s, End: %s\n", sDate, end)
-	for sDate.Before(end) || sDate.Equal(end) {
-		wd := e.GetWorkday(sDate, start)
+	for !sDate.After(end) {
+		wd := e.GetWorkday(sDate, start.AddDate(0, 0, -1))
 		if wd != nil && wd.Code != "" {
 			hours := wd.Hours
 			if hours == 0.0 {
