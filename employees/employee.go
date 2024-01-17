@@ -766,6 +766,9 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					}
 				}
 				req.StartDate = lvDate
+				if req.StartDate.After(req.EndDate) {
+					req.EndDate = lvDate
+				}
 				// reset the leave dates
 				req.SetLeaveDays(e)
 				if req.Status == "APPROVED" {
@@ -810,6 +813,9 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					}
 				}
 				req.EndDate = lvDate
+				if req.EndDate.Before(req.StartDate) {
+					req.StartDate = lvDate
+				}
 				// reset the leave dates
 				req.SetLeaveDays(e)
 				if req.Status == "APPROVED" {
