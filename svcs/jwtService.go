@@ -15,7 +15,7 @@ import (
 )
 
 func CreateToken(userid primitive.ObjectID, email string) (string, error) {
-	key := []byte(os.Getenv("JWT_SECRET"))
+	key := []byte(strings.TrimSpace(os.Getenv("JWT_SECRET")))
 	expireTime := time.Now().Add(6 * time.Hour)
 	claims := &users.JWTClaim{
 		UserID:       userid.Hex(),
@@ -37,7 +37,7 @@ func ValidateToken(signedToken string) (*users.JWTClaim, error) {
 		signedToken,
 		&users.JWTClaim{},
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(os.Getenv("JWT_SECRET")), nil
+			return []byte(strings.TrimSpace(os.Getenv("JWT_SECRET"))), nil
 		},
 	)
 	if err != nil {

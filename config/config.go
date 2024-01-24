@@ -3,12 +3,13 @@ package config
 import (
 	"log"
 	"os"
+	"strings"
 
 	"github.com/joho/godotenv"
 )
 
 func Config(key string) string {
-	answer := os.Getenv((key))
+	answer := strings.TrimSpace(os.Getenv((key)))
 	if answer == "" {
 		err := godotenv.Load(".env")
 		if err != nil {
@@ -17,5 +18,5 @@ func Config(key string) string {
 		}
 	}
 
-	return os.Getenv(key)
+	return strings.TrimSpace(os.Getenv(key))
 }
