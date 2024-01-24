@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/erneap/go-models/converters"
@@ -13,7 +14,7 @@ import (
 
 func ConnectDB() *mongo.Client {
 	user := Config("MONGO_USER")
-	passwd := Config("MONGO_PASSWD")
+	passwd := strings.TrimSpace(Config("MONGO_PASSWD"))
 	host := Config("MONGO_HOST")
 	port := Config("MONGO_PORT")
 	uri := Config("MONGO_URI")
