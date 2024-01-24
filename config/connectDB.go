@@ -20,6 +20,7 @@ func ConnectDB() *mongo.Client {
 	if user != "" {
 		uri = fmt.Sprintf("mongodb://%s:%s@%s:%s", user, passwd, host, port)
 	}
+	log.Println(uri)
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Fatal(err)
