@@ -2,6 +2,7 @@ package config
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"time"
 
@@ -11,7 +12,15 @@ import (
 )
 
 func ConnectDB() *mongo.Client {
-	client, err := mongo.NewClient(options.Client().ApplyURI(Config("MONGO_URI")))
+	user := Config("MONGO_USER")
+	passwd := Config("MONGO_PASSWD")
+	host := Config("MONGO_HOST")
+	port := Config("MONGO_PORT")
+	uri := Config("MONGO_URI")
+	if user != "" {
+		uri = fmt.Sprintf("mongodb://%s:%s@%s:%s", user, passwd, host, port)
+	}
+	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
 	if err != nil {
 		log.Fatal(err)
 	}
