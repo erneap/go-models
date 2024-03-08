@@ -1,6 +1,7 @@
 package teams
 
 import (
+	"sort"
 	"strings"
 	"time"
 )
@@ -50,6 +51,7 @@ type Company struct {
 	IngestStartDay int              `json:"startDay,omitempty" bson:"startDay,omitempty"`
 	IngestPwd      string           `json:"ingestPwd" bson:"ingestPwd"`
 	Holidays       []CompanyHoliday `json:"holidays,omitempty" bson:"holidays,omitempty"`
+	ModPeriods     []ModPeriod      `json:"modperiods,omitempty" bson:"modperiods,omitempty"`
 }
 
 type ByCompany []Company
@@ -64,5 +66,58 @@ func (c *Company) Purge(date time.Time) {
 	for h, hol := range c.Holidays {
 		hol.Purge(date)
 		c.Holidays[h] = hol
+	}
+}
+
+func (c *Company) HasModPeriod(date time.Time) bool {
+	for _, mod := range c.ModPeriods {
+		if date.Equal(mod.Start) || date.Equal(mod.End) ||
+			(date.After(mod.Start) && date.Before(mod.End)) {
+			return true
+		}
+	}
+	return false
+}
+
+func (c *Company) AddModPeriod(year int, start, end time.Time) {
+	for m, mod := range c.ModPeriods {
+		if mod.Year == year {
+			mod.Start = start
+			mod.End = end
+			c.ModPeriods[m] = mod
+			return
+		}
+	}
+	mod := ModPeriod{
+		Year:  year,
+		Start: start,
+		End:   end,
+	}
+	c.ModPeriods = append(c.ModPeriods, mod)
+	sort.Sort(ByModPeriod(c.ModPeriods))
+}
+
+func (c *Company) UpdateModPeriod(year int, field string, date time.Time) {
+	for m, mod := range c.ModPeriods {
+		if mod.Year == year {
+			if strings.ToLower(field) == "start" {
+				mod.Start = date
+			} else if strings.ToLower(field) == "end" {
+				mod.End = date
+			}
+			c.ModPeriods[m] = mod
+		}
+	}
+}
+
+func (c *Company) DeleteModPeriod(year int) {
+	pos := -1
+	for m, mod := range c.ModPeriods {
+		if mod.Year == year {
+			pos = m
+		}
+	}
+	if pos >= 0 {
+		c.ModPeriods = append(c.ModPeriods[:pos], c.ModPeriods[pos+1:]...)
 	}
 }

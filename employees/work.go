@@ -28,6 +28,7 @@ type Work struct {
 	ChargeNumber string    `json:"chargeNumber"`
 	Extension    string    `json:"extension"`
 	PayCode      int       `json:"payCode"`
+	ModifiedTime bool      `json:"modtime,omitempty" bson:"modtime,omitempty"`
 	Hours        float64   `json:"hours"`
 }
 
