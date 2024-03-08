@@ -1153,7 +1153,8 @@ func (e *Employee) GetWorkedHours(start, end time.Time) float64 {
 	for _, wk := range e.Work {
 		if (wk.DateWorked.Equal(start) ||
 			wk.DateWorked.After(start)) &&
-			wk.DateWorked.Before(end) {
+			wk.DateWorked.Before(end) &&
+			!wk.ModifiedTime {
 			answer += wk.Hours
 		}
 	}
