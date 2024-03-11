@@ -823,6 +823,25 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				}
 			case "code", "primarycode":
 				req.PrimaryCode = value
+				if strings.ToLower(value) == "h" && req.StartDate.Equal(req.EndDate) {
+					// set the single day as holiday and 8 hours
+					for d, day := range req.RequestedDays {
+						day.Code = "H"
+						day.Hours = 8.0
+						req.RequestedDays[d] = day
+					}
+				} else if strings.ToLower(value) != "h" {
+					// if not holiday, set all the days as the selected code and all
+					// leave days to standard work day.
+					stdWd := e.GetStandardWorkday(req.StartDate)
+					for d, day := range req.RequestedDays {
+						if day.Code != "" {
+							day.Code = value
+							day.Hours = stdWd
+							req.RequestedDays[d] = day
+						}
+					}
+				}
 			case "dates":
 				parts := strings.Split(value, "|")
 				start, err := time.ParseInLocation("2006-01-02", parts[0], time.UTC)
