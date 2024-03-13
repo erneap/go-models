@@ -1448,6 +1448,30 @@ func (e *Employee) RemoveEmailAddress(email string) {
 	}
 }
 
+func (e *Employee) HasModTime(start, end time.Time) bool {
+	answer := false
+	for _, wk := range e.Work {
+		if (wk.DateWorked.Equal(start) || wk.DateWorked.Equal(end) ||
+			(wk.DateWorked.After(start) && wk.DateWorked.Before(end))) &&
+			wk.ModifiedTime {
+			answer = true
+		}
+	}
+	return answer
+}
+
+func (e *Employee) GetModTime(start, end time.Time) float64 {
+	answer := 0.0
+	for _, wk := range e.Work {
+		if (wk.DateWorked.Equal(start) || wk.DateWorked.Equal(end) ||
+			(wk.DateWorked.After(start) && wk.DateWorked.Before(end))) &&
+			wk.ModifiedTime {
+			answer += wk.Hours
+		}
+	}
+	return answer
+}
+
 type EmployeeCompareCode struct {
 	Code    string
 	IsLeave bool
