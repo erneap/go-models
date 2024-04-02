@@ -22,6 +22,23 @@ func (c ByCofSCompany) Less(i, j int) bool {
 }
 func (c ByCofSCompany) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
+type CofSSection struct {
+	ID             int               `json:"id" bson:"id"`
+	CompanyID      string            `json:"company" bson:"company"`
+	Label          string            `json:"label" bson:"label"`
+	SignatureBlock string            `json:"signature" bson:"signature"`
+	LaborCodes     []labor.LaborCode `json:"laborcodes,omitempty" bson:"laborcodes,omitempty"`
+	ShowUnit       bool              `json:"showunit" bson:"showunit"`
+}
+
+type ByCofSSection []CofSSection
+
+func (c ByCofSSection) Len() int { return len(c) }
+func (c ByCofSSection) Less(i, j int) bool {
+	return c[i].ID < c[j].ID
+}
+func (c ByCofSSection) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
 type CofSReport struct {
 	ID             int           `json:"id" bson:"id"`
 	Name           string        `json:"name" bson:"name"`
@@ -30,6 +47,7 @@ type CofSReport struct {
 	StartDate      time.Time     `json:"startdate" bson:"startdate"`
 	EndDate        time.Time     `json:"enddate" bson:"enddate"`
 	Companies      []CofSCompany `json:"companies,omitempty" bson:"companies,omitempty"`
+	Sections       []CofSSection `json:"sections,omitempty" bson:"sections,omitempty"`
 }
 
 type ByCofSReport []CofSReport
