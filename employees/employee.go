@@ -49,6 +49,20 @@ func (c ByEmployees) Less(i, j int) bool {
 }
 func (c ByEmployees) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
+type ByEmployeesFirst []Employee
+
+func (c ByEmployeesFirst) Len() int { return len(c) }
+func (c ByEmployeesFirst) Less(i, j int) bool {
+	if c[i].Name.FirstName == c[j].Name.FirstName {
+		if c[i].Name.LastName == c[j].Name.LastName {
+			return c[i].Name.MiddleName < c[j].Name.MiddleName
+		}
+		return c[i].Name.LastName < c[j].Name.LastName
+	}
+	return c[i].Name.FirstName < c[j].Name.FirstName
+}
+func (c ByEmployeesFirst) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+
 func (e *Employee) RemoveLeaves(start, end time.Time) {
 	if e.Data != nil {
 		e.ConvertFromData()
