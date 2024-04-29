@@ -196,7 +196,7 @@ func (e *Employee) GetWorkday(date, lastWork time.Time) *Workday {
 	for _, wk := range e.Work {
 		if wk.DateWorked.Year() == date.Year() &&
 			wk.DateWorked.Month() == date.Month() &&
-			wk.DateWorked.Day() == date.Day() {
+			wk.DateWorked.Day() == date.Day() && !wk.ModifiedTime {
 			work += wk.Hours
 		}
 	}
