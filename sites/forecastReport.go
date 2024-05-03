@@ -141,3 +141,24 @@ func (r *ForecastReport) removeUnusedPeriods() {
 		}
 	}
 }
+
+func (r *ForecastReport) AddOutCyclePeriod(dt time.Time) {
+	perid := time.Date(dt.Year(), dt.Month(), 1, 0, 0, 0, 0, time.UTC)
+	found := false
+	for p, prd := range r.Periods {
+		if prd.Month.Equal(perid) {
+			found = true
+			prd.Periods = append(prd.Periods, dt)
+			sort.Sort(sites.ByDate(prd.Periods))
+			r.Periods[p] = prd
+		}
+	}
+	if !found {
+		prd := sites.ForecastPeriod{
+			Month: perid,
+		}
+		prd.Periods = append(prd.Periods, dt)
+		r.Periods = append(r.Periods, prd)
+		sort.Sort(sites.ByForecastPeriod(r.Periods))
+	}
+}
