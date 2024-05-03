@@ -147,10 +147,17 @@ func (r *ForecastReport) AddOutCyclePeriod(dt time.Time) {
 	found := false
 	for p, prd := range r.Periods {
 		if prd.Month.Equal(perid) {
+			for _, dtprd := range prd.Periods {
+				if dtprd.Equal(dt) {
+					found = true
+				}
+			}
+			if !found {
+				prd.Periods = append(prd.Periods, dt)
+				sort.Sort(ByDate(prd.Periods))
+				r.Periods[p] = prd
+			}
 			found = true
-			prd.Periods = append(prd.Periods, dt)
-			sort.Sort(ByDate(prd.Periods))
-			r.Periods[p] = prd
 		}
 	}
 	if !found {
