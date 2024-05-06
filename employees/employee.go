@@ -614,7 +614,8 @@ func (e *Employee) DeleteLeave(id int) *LeaveDay {
 	var oldLv *LeaveDay
 	oldLv = nil
 	pos := -1
-	for i, lv := range e.Leaves {
+	for i := 0; i < len(e.Leaves) && oldLv == nil; i++ {
+		lv := e.Leaves[i]
 		if lv.ID == id {
 			oldLv = &lv
 			pos = i
