@@ -779,6 +779,9 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 								e.Leaves[endPos:]...)
 						}
 					}
+				} else if strings.EqualFold(req.Status, "approved") {
+					message = fmt.Sprintf("Leave Request from %s: Starting date changed "+
+						"to %s", e.Name.GetLastFirst(), lvDate.Format("2006-01-03"))
 				}
 				req.StartDate = lvDate
 				if req.StartDate.After(req.EndDate) {
@@ -826,6 +829,9 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 								e.Leaves[endPos:]...)
 						}
 					}
+				} else if strings.EqualFold(req.Status, "approved") {
+					message = fmt.Sprintf("Leave Request from %s: Ending Date changed "+
+						"to %s", e.Name.GetLastFirst(), lvDate.Format("2006-01-02"))
 				}
 				req.EndDate = lvDate
 				if req.EndDate.Before(req.StartDate) {
