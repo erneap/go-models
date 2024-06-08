@@ -14,12 +14,13 @@ type UpdateRequest struct {
 }
 
 type AddUserRequest struct {
-	EmailAddress string `json:"emailAddress"`
-	FirstName    string `json:"firstName"`
-	MiddleName   string `json:"middleName,omitempty"`
-	LastName     string `json:"lastName"`
-	Password     string `json:"password"`
-	Application  string `json:"application"`
+	EmailAddress string   `json:"emailAddress"`
+	FirstName    string   `json:"firstName"`
+	MiddleName   string   `json:"middleName,omitempty"`
+	LastName     string   `json:"lastName"`
+	Password     string   `json:"password"`
+	Application  string   `json:"application"`
+	Permissions  []string `json:"permissions,omitempty"`
 }
 
 type PasswordResetRequest struct {
