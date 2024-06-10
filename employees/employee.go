@@ -956,7 +956,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					"Comment: " + value
 			case "day", "requestday":
 				bApproved := strings.EqualFold(req.Status, "approved")
-				fmt.Println(bApproved)
 				parts := strings.Split(value, "|")
 				lvDate, _ := time.Parse("2006-01-02", parts[0])
 				code := parts[1]
