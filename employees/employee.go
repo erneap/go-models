@@ -1036,6 +1036,23 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 			req.ApprovedBy = value
 			req.ApprovalDate = time.Now().UTC()
 			req.Status = "APPROVED"
+			// remove any leaves associated with this request
+			var deletes []int
+			maxLvID := 0
+			for l, lv := range e.Leaves {
+				if lv.RequestID == req.ID && strings.ToLower(lv.Status) != "actual" {
+					deletes = append(deletes, l)
+				}
+				if lv.ID > maxLvID {
+					maxLvID = lv.ID
+				}
+			}
+			if len(deletes) > 0 {
+				for d := len(deletes) - 1; d >= 0; d-- {
+					pos := deletes[d]
+					e.Leaves = append(e.Leaves[:pos], e.Leaves[pos+1:]...)
+				}
+			}
 			if strings.ToLower(req.PrimaryCode) != "mod" {
 				for d, day := range req.RequestedDays {
 					day.Status = "APPROVED"
@@ -1052,19 +1069,43 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 						vari.EndDate.Equal(req.EndDate) && vari.IsMod {
 						found = true
 						extra := int(req.StartDate.Weekday())
+						lastCode := ""
+						workcenter := ""
 						for _, day := range req.RequestedDays {
+							isLeave := false
+							for _, wc := range leavecodes {
+								if strings.EqualFold(wc.Id, day.Code) {
+									isLeave = true
+								}
+							}
+							if isLeave {
+								maxLvID++
+								lv := LeaveDay{
+									ID:        maxLvID,
+									LeaveDate: day.LeaveDate,
+									Code:      day.Code,
+									Hours:     day.Hours,
+									Status:    "APPROVED",
+									RequestID: req.ID,
+								}
+								e.Leaves = append(e.Leaves, lv)
+								sort.Sort(ByLeaveDay(e.Leaves))
+							} else {
+								lastCode = day.Code
+								workcenter = day.Status
+							}
 							dow := (int(day.LeaveDate.Weekday()) + extra)
 							if dow < len(vari.Schedule.Workdays) {
 								tday := vari.Schedule.Workdays[dow]
-								tday.Code = day.Code
+								tday.Code = lastCode
 								tday.Hours = day.Hours
-								tday.Workcenter = day.Status
+								tday.Workcenter = workcenter
 								vari.Schedule.Workdays[dow] = tday
 							} else {
 								tday := Workday{
 									ID:         uint(dow),
-									Code:       day.Code,
-									Workcenter: day.Status,
+									Code:       lastCode,
+									Workcenter: workcenter,
 									Hours:      day.Hours,
 								}
 								vari.Schedule.Workdays = append(vari.Schedule.Workdays, tday)
