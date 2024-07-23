@@ -937,93 +937,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					e.Name.GetLastFirst()) + "submitted for approval.  " +
 					fmt.Sprintf("Requested Leave Date: %s - %s.",
 						req.StartDate.Format("02 Jan 06"), req.EndDate.Format("02 Jan 06"))
-			case "approve":
-				req.ApprovedBy = value
-				req.ApprovalDate = time.Now().UTC()
-				req.Status = "APPROVED"
-				if strings.ToLower(req.PrimaryCode) != "mod" {
-					for d, day := range req.RequestedDays {
-						day.Status = "APPROVED"
-						req.RequestedDays[d] = day
-					}
-					message = "Leave Request: Leave Request approved."
-					e.ChangeApprovedLeaveDates(req)
-				} else if strings.ToLower(req.PrimaryCode) == "mod" {
-					// check for variation for period
-					// if yes, modify variation
-					found := false
-					for v, vari := range e.Variations {
-						if vari.StartDate.Equal(req.StartDate) &&
-							vari.EndDate.Equal(req.EndDate) && vari.IsMod {
-							found = true
-							extra := int(req.StartDate.Weekday())
-							for _, day := range req.RequestedDays {
-								dow := (int(day.LeaveDate.Weekday()) + extra)
-								if dow < len(vari.Schedule.Workdays) {
-									tday := vari.Schedule.Workdays[dow]
-									tday.Code = day.Code
-									tday.Hours = day.Hours
-									tday.Workcenter = day.Status
-									vari.Schedule.Workdays[dow] = tday
-								} else {
-									tday := Workday{
-										ID:         uint(dow),
-										Code:       day.Code,
-										Workcenter: day.Status,
-										Hours:      day.Hours,
-									}
-									vari.Schedule.Workdays = append(vari.Schedule.Workdays, tday)
-								}
-							}
-							e.Variations[v] = vari
-						}
-					}
-					// if no, create new variation
-					if !found {
-						site := e.SiteID
-						max := uint(0)
-						for _, vari := range e.Variations {
-							if vari.ID > max {
-								max = vari.ID
-							}
-						}
-						vari := Variation{
-							ID:        max + 1,
-							IsMids:    false,
-							IsMod:     true,
-							StartDate: req.StartDate,
-							EndDate:   req.EndDate,
-							Site:      site,
-						}
-						vari.Schedule = Schedule{
-							ID: 0,
-						}
-						start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
-							req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
-						for start.Weekday() != time.Sunday {
-							start = start.AddDate(0, 0, -1)
-						}
-						count := 0
-						for start.Before(req.EndDate) || start.Equal(req.EndDate) {
-							var day Workday
-							day.ID = uint(count)
-							found = false
-							for _, d := range req.RequestedDays {
-								if !found && d.LeaveDate.Year() == start.Year() &&
-									d.LeaveDate.Month() == start.Month() &&
-									d.LeaveDate.Day() == start.Day() {
-									found = true
-									day.Code = d.Code
-									day.Hours = d.Hours
-									day.Workcenter = d.Status
-								}
-							}
-							vari.Schedule.Workdays = append(vari.Schedule.Workdays, day)
-						}
-						e.Variations = append(e.Variations, vari)
-						sort.Sort(ByVariation(e.Variations))
-					}
-				}
 			case "unapprove":
 				req.ApprovedBy = ""
 				req.ApprovalDate = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
@@ -1103,6 +1016,108 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					Comment:     value,
 				}
 				req.Comments = append(req.Comments, *newComment)
+			}
+			e.Requests[i] = req
+			return message, &req, nil
+		}
+	}
+	return "", nil, errors.New("not found")
+}
+
+func (e *Employee) ApproveLeaveRequest(request, field, value string,
+	offset float64, leavecodes []labor.Workcode) (string, *LeaveRequest, error) {
+
+	if e.Data != nil {
+		e.ConvertFromData()
+	}
+	message := ""
+	for i, req := range e.Requests {
+		if req.ID == request {
+			req.ApprovedBy = value
+			req.ApprovalDate = time.Now().UTC()
+			req.Status = "APPROVED"
+			if strings.ToLower(req.PrimaryCode) != "mod" {
+				for d, day := range req.RequestedDays {
+					day.Status = "APPROVED"
+					req.RequestedDays[d] = day
+				}
+				message = "Leave Request: Leave Request approved."
+				e.ChangeApprovedLeaveDates(req)
+			} else if strings.ToLower(req.PrimaryCode) == "mod" {
+				// check for variation for period
+				// if yes, modify variation
+				found := false
+				for v, vari := range e.Variations {
+					if vari.StartDate.Equal(req.StartDate) &&
+						vari.EndDate.Equal(req.EndDate) && vari.IsMod {
+						found = true
+						extra := int(req.StartDate.Weekday())
+						for _, day := range req.RequestedDays {
+							dow := (int(day.LeaveDate.Weekday()) + extra)
+							if dow < len(vari.Schedule.Workdays) {
+								tday := vari.Schedule.Workdays[dow]
+								tday.Code = day.Code
+								tday.Hours = day.Hours
+								tday.Workcenter = day.Status
+								vari.Schedule.Workdays[dow] = tday
+							} else {
+								tday := Workday{
+									ID:         uint(dow),
+									Code:       day.Code,
+									Workcenter: day.Status,
+									Hours:      day.Hours,
+								}
+								vari.Schedule.Workdays = append(vari.Schedule.Workdays, tday)
+							}
+						}
+						e.Variations[v] = vari
+					}
+				}
+				// if no, create new variation
+				if !found {
+					site := e.SiteID
+					max := uint(0)
+					for _, vari := range e.Variations {
+						if vari.ID > max {
+							max = vari.ID
+						}
+					}
+					vari := Variation{
+						ID:        max + 1,
+						IsMids:    false,
+						IsMod:     true,
+						StartDate: req.StartDate,
+						EndDate:   req.EndDate,
+						Site:      site,
+					}
+					vari.Schedule = Schedule{
+						ID: 0,
+					}
+					start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
+						req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
+					for start.Weekday() != time.Sunday {
+						start = start.AddDate(0, 0, -1)
+					}
+					count := 0
+					for start.Before(req.EndDate) || start.Equal(req.EndDate) {
+						var day Workday
+						day.ID = uint(count)
+						found = false
+						for _, d := range req.RequestedDays {
+							if !found && d.LeaveDate.Year() == start.Year() &&
+								d.LeaveDate.Month() == start.Month() &&
+								d.LeaveDate.Day() == start.Day() {
+								found = true
+								day.Code = d.Code
+								day.Hours = d.Hours
+								day.Workcenter = d.Status
+							}
+						}
+						vari.Schedule.Workdays = append(vari.Schedule.Workdays, day)
+					}
+					e.Variations = append(e.Variations, vari)
+					sort.Sort(ByVariation(e.Variations))
+				}
 			}
 			e.Requests[i] = req
 			return message, &req, nil

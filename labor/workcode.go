@@ -1,4 +1,4 @@
-package teams
+package labor
 
 type Workcode struct {
 	Id        string `json:"id" bson:"id"`
