@@ -978,6 +978,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						req.RequestedDays[j] = lv
 					}
 				}
+
 				if !found {
 					lv := LeaveDay{
 						LeaveDate: lvDate,
