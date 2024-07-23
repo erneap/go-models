@@ -247,6 +247,7 @@ type Variation struct {
 	ID        uint      `json:"id" bson:"id"`
 	Site      string    `json:"site" bson:"site"`
 	IsMids    bool      `json:"mids" bson:"mids"`
+	IsMod     bool      `json:"-" bson:"mod,omitempty"`
 	StartDate time.Time `json:"startdate" bson:"startdate"`
 	EndDate   time.Time `json:"enddate" bson:"enddate"`
 	Schedule  Schedule  `json:"schedule" bson:"schedule"`

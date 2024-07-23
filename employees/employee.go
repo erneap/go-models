@@ -952,15 +952,76 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 					// check for variation for period
 					// if yes, modify variation
 					found := false
-					for _, vari := range e.Variations {
+					for v, vari := range e.Variations {
 						if vari.StartDate.Equal(req.StartDate) &&
-							vari.EndDate.Equal(req.EndDate) {
+							vari.EndDate.Equal(req.EndDate) && vari.IsMod {
 							found = true
+							extra := int(req.StartDate.Weekday())
+							for _, day := range req.RequestedDays {
+								dow := (int(day.LeaveDate.Weekday()) + extra)
+								if dow < len(vari.Schedule.Workdays) {
+									tday := vari.Schedule.Workdays[dow]
+									tday.Code = day.Code
+									tday.Hours = day.Hours
+									tday.Workcenter = day.Status
+									vari.Schedule.Workdays[dow] = tday
+								} else {
+									tday := Workday{
+										ID:         uint(dow),
+										Code:       day.Code,
+										Workcenter: day.Status,
+										Hours:      day.Hours,
+									}
+									vari.Schedule.Workdays = append(vari.Schedule.Workdays, tday)
+								}
+							}
+							e.Variations[v] = vari
 						}
 					}
 					// if no, create new variation
 					if !found {
-
+						site := e.SiteID
+						max := uint(0)
+						for _, vari := range e.Variations {
+							if vari.ID > max {
+								max = vari.ID
+							}
+						}
+						vari := Variation{
+							ID:        max + 1,
+							IsMids:    false,
+							IsMod:     true,
+							StartDate: req.StartDate,
+							EndDate:   req.EndDate,
+							Site:      site,
+						}
+						vari.Schedule = Schedule{
+							ID: 0,
+						}
+						start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
+							req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
+						for start.Weekday() != time.Sunday {
+							start = start.AddDate(0, 0, -1)
+						}
+						count := 0
+						for start.Before(req.EndDate) || start.Equal(req.EndDate) {
+							var day Workday
+							day.ID = uint(count)
+							found = false
+							for _, d := range req.RequestedDays {
+								if !found && d.LeaveDate.Year() == start.Year() &&
+									d.LeaveDate.Month() == start.Month() &&
+									d.LeaveDate.Day() == start.Day() {
+									found = true
+									day.Code = d.Code
+									day.Hours = d.Hours
+									day.Workcenter = d.Status
+								}
+							}
+							vari.Schedule.Workdays = append(vari.Schedule.Workdays, day)
+						}
+						e.Variations = append(e.Variations, vari)
+						sort.Sort(ByVariation(e.Variations))
 					}
 				}
 			case "unapprove":
@@ -1081,7 +1142,7 @@ func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
 		e.Leaves = append(e.Leaves[:startPos], e.Leaves[endPos:]...)
 	}
 
-	// now add the leave request's leave days to the leave list
+	// now add the leave request's leave days to the leave list. if now mod time
 	for _, lv := range lr.RequestedDays {
 		maxId++
 		lv.ID = maxId
@@ -1097,9 +1158,11 @@ func (e *Employee) DeleteLeaveRequest(request string) (string, error) {
 		e.ConvertFromData()
 	}
 	pos := -1
+	var deletable *LeaveRequest
 	for i, req := range e.Requests {
 		if req.ID == request {
 			pos = i
+			deletable = &req
 			message = fmt.Sprintf("Deleted Leave Request for %s, Dates: %s to %s ",
 				e.Name.GetLastFirst(), req.StartDate.Format("01/02/06"),
 				req.EndDate.Format("01/02/06"))
@@ -1111,17 +1174,30 @@ func (e *Employee) DeleteLeaveRequest(request string) (string, error) {
 	e.Requests = append(e.Requests[:pos], e.Requests[pos+1:]...)
 	// delete all leaves associated with this leave request, except if the leave
 	// has a status of actual
-	sort.Sort(ByLeaveDay(e.Leaves))
-	var deletes []int
-	for i, lv := range e.Leaves {
-		if lv.RequestID == request && strings.ToLower(lv.Status) != "actual" {
-			deletes = append(deletes, i)
+	if strings.ToLower(deletable.PrimaryCode) != "mod" {
+		sort.Sort(ByLeaveDay(e.Leaves))
+		var deletes []int
+		for i, lv := range e.Leaves {
+			if lv.RequestID == request && strings.ToLower(lv.Status) != "actual" {
+				deletes = append(deletes, i)
+			}
 		}
-	}
-	if len(deletes) > 0 {
-		for i := len(deletes) - 1; i >= 0; i-- {
-			e.Leaves = append(e.Leaves[:deletes[i]],
-				e.Leaves[deletes[i]+1:]...)
+		if len(deletes) > 0 {
+			for i := len(deletes) - 1; i >= 0; i-- {
+				e.Leaves = append(e.Leaves[:deletes[i]],
+					e.Leaves[deletes[i]+1:]...)
+			}
+		}
+	} else {
+		pos = -1
+		for v, vari := range e.Variations {
+			if vari.IsMod && vari.StartDate.Equal(deletable.StartDate) &&
+				vari.EndDate.Equal(deletable.EndDate) {
+				pos = v
+			}
+		}
+		if pos >= 0 {
+			e.Variations = append(e.Variations[:pos], e.Variations[pos+1:]...)
 		}
 	}
 	return message, nil
