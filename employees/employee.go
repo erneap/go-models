@@ -851,6 +851,14 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						day.Hours = 8.0
 						req.RequestedDays[d] = day
 					}
+				} else if strings.ToLower(value) == "mod" {
+					for d, day := range req.RequestedDays {
+						wd := e.GetWorkday(day.LeaveDate, day.LeaveDate)
+						day.Code = wd.Code
+						day.Hours = wd.Hours
+						day.Status = wd.Workcenter
+						req.RequestedDays[d] = day
+					}
 				} else if strings.ToLower(value) != "h" {
 					// if not holiday, set all the days as the selected code and all
 					// leave days to standard work day.
@@ -933,12 +941,28 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				req.ApprovedBy = value
 				req.ApprovalDate = time.Now().UTC()
 				req.Status = "APPROVED"
-				for d, day := range req.RequestedDays {
-					day.Status = "APPROVED"
-					req.RequestedDays[d] = day
+				if strings.ToLower(req.PrimaryCode) != "mod" {
+					for d, day := range req.RequestedDays {
+						day.Status = "APPROVED"
+						req.RequestedDays[d] = day
+					}
+					message = "Leave Request: Leave Request approved."
+					e.ChangeApprovedLeaveDates(req)
+				} else if strings.ToLower(req.PrimaryCode) == "mod" {
+					// check for variation for period
+					// if yes, modify variation
+					found := false
+					for _, vari := range e.Variations {
+						if vari.StartDate.Equal(req.StartDate) &&
+							vari.EndDate.Equal(req.EndDate) {
+							found = true
+						}
+					}
+					// if no, create new variation
+					if !found {
+
+					}
 				}
-				message = "Leave Request: Leave Request approved."
-				e.ChangeApprovedLeaveDates(req)
 			case "unapprove":
 				req.ApprovedBy = ""
 				req.ApprovalDate = time.Date(1970, time.January, 1, 0, 0, 0, 0, time.UTC)
