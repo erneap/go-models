@@ -960,6 +960,9 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				hours, _ := strconv.ParseFloat(parts[2], 64)
 				found := false
 				status := ""
+				if len(parts) > 3 {
+					status = parts[3]
+				}
 				for j, lv := range req.RequestedDays {
 					if lv.LeaveDate.Equal(lvDate) {
 						found = true
