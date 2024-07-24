@@ -878,6 +878,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 							req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
 						end := time.Date(req.EndDate.Year(), req.EndDate.Month(),
 							req.RequestDate.Day(), 0, 0, 0, 0, time.UTC)
+						fmt.Println(end)
 						lastDay := e.GetLastWorkday()
 						count := -1
 						hours := e.GetStandardWorkday(start)
@@ -887,6 +888,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						for start.Before(end) || start.Equal(end) {
 							count++
 							wd := e.GetWorkday(start, lastDay)
+							fmt.Println(wd.Code)
 							if wd.Code != "" {
 								day := LeaveDay{
 									ID:        count,
