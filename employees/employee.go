@@ -969,7 +969,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 			case "requested":
 				req.Status = "REQUESTED"
 				for d, day := range req.RequestedDays {
-					if day.Status == "" {
+					if day.Code != "" && day.Status == "" {
 						day.Status = "REQUESTED"
 					}
 					req.RequestedDays[d] = day
