@@ -844,30 +844,43 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				}
 			case "code", "primarycode":
 				req.PrimaryCode = value
-				if strings.ToLower(value) == "h" && req.StartDate.Equal(req.EndDate) {
-					// set the single day as holiday and 8 hours
-					for d, day := range req.RequestedDays {
-						day.Code = "H"
-						day.Hours = 8.0
-						req.RequestedDays[d] = day
+				if strings.ToLower(value) == "mod" {
+					req.RequestedDays = req.RequestedDays[:0]
+					start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
+						req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
+					lastDay := e.GetLastWorkday()
+					count := -1
+					for start.Before(req.EndDate) || start.Equal(req.EndDate) {
+						count++
+						wd := e.GetWorkday(start, lastDay)
+						day := LeaveDay{
+							ID:        count,
+							LeaveDate: start,
+							Code:      wd.Code,
+							Hours:     wd.Hours,
+							Status:    wd.Workcenter,
+						}
+						req.RequestedDays = append(req.RequestedDays, day)
+						start = start.AddDate(0, 0, 1)
 					}
-				} else if strings.ToLower(value) == "mod" {
-					for d, day := range req.RequestedDays {
-						wd := e.GetWorkday(day.LeaveDate, day.LeaveDate)
-						day.Code = wd.Code
-						day.Hours = wd.Hours
-						day.Status = wd.Workcenter
-						req.RequestedDays[d] = day
-					}
-				} else if strings.ToLower(value) != "h" {
-					// if not holiday, set all the days as the selected code and all
-					// leave days to standard work day.
-					stdWd := e.GetStandardWorkday(req.StartDate)
-					for d, day := range req.RequestedDays {
-						if day.Code != "" {
-							day.Code = value
-							day.Hours = stdWd
+				} else {
+					if strings.ToLower(value) == "h" && req.StartDate.Equal(req.EndDate) {
+						// set the single day as holiday and 8 hours
+						for d, day := range req.RequestedDays {
+							day.Code = "H"
+							day.Hours = 8.0
 							req.RequestedDays[d] = day
+						}
+					} else if strings.ToLower(value) != "h" {
+						// if not holiday, set all the days as the selected code and all
+						// leave days to standard work day.
+						stdWd := e.GetStandardWorkday(req.StartDate)
+						for d, day := range req.RequestedDays {
+							if day.Code != "" {
+								day.Code = value
+								day.Hours = stdWd
+								req.RequestedDays[d] = day
+							}
 						}
 					}
 				}
