@@ -853,7 +853,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 							start = start.AddDate(0, 0, -1)
 						}
 						end := time.Date(req.EndDate.Year(), req.EndDate.Month(),
-							req.RequestDate.Day(), 0, 0, 0, 0, time.UTC)
+							req.EndDate.Day(), 0, 0, 0, 0, time.UTC)
 						for end.Weekday() != time.Saturday {
 							end = end.AddDate(0, 0, 1)
 						}
@@ -877,7 +877,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
 							req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
 						end := time.Date(req.EndDate.Year(), req.EndDate.Month(),
-							req.RequestDate.Day(), 0, 0, 0, 0, time.UTC)
+							req.EndDate.Day(), 0, 0, 0, 0, time.UTC)
 						fmt.Println(end)
 						lastDay := e.GetLastWorkday()
 						count := -1
