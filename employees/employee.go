@@ -992,7 +992,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				message = "Leave Request: Leave Request unapproved.\n" +
 					"Comment: " + value
 			case "day", "requestday":
-				fmt.Println(value)
 				bApproved := strings.EqualFold(req.Status, "approved")
 				parts := strings.Split(value, "|")
 				lvDate, _ := time.Parse("2006-01-02", parts[0])
@@ -1001,6 +1000,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				found := false
 				status := ""
 				if len(parts) > 3 {
+					fmt.Println(parts[3])
 					status = parts[3]
 				}
 				for j, lv := range req.RequestedDays {
