@@ -1125,6 +1125,7 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 									isLeave = true
 								}
 							}
+							fmt.Println(isLeave)
 							if isLeave {
 								maxLvID++
 								lv := LeaveDay{
@@ -1161,6 +1162,8 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 						e.Variations[v] = vari
 					}
 				}
+				fmt.Print("Found: ")
+				fmt.Println(found)
 				// if no, create new variation
 				if !found {
 					site := e.SiteID
@@ -1186,8 +1189,9 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 					for start.Weekday() != time.Sunday {
 						start = start.AddDate(0, 0, -1)
 					}
-					count := 0
+					count := -1
 					for start.Before(req.EndDate) || start.Equal(req.EndDate) {
+						count++
 						var day Workday
 						day.ID = uint(count)
 						found = false
@@ -1202,6 +1206,7 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 							}
 						}
 						vari.Schedule.Workdays = append(vari.Schedule.Workdays, day)
+						start = start.AddDate(0, 0, 1)
 					}
 					e.Variations = append(e.Variations, vari)
 					sort.Sort(ByVariation(e.Variations))
