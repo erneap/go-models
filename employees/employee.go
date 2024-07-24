@@ -878,7 +878,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 							req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
 						end := time.Date(req.EndDate.Year(), req.EndDate.Month(),
 							req.EndDate.Day(), 0, 0, 0, 0, time.UTC)
-						fmt.Println(end)
 						lastDay := e.GetLastWorkday()
 						count := -1
 						hours := e.GetStandardWorkday(start)
@@ -888,7 +887,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						for start.Before(end) || start.Equal(end) {
 							count++
 							wd := e.GetWorkday(start, lastDay)
-							fmt.Println(wd.Code)
 							if wd.Code != "" {
 								day := LeaveDay{
 									ID:        count,
@@ -994,6 +992,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 				message = "Leave Request: Leave Request unapproved.\n" +
 					"Comment: " + value
 			case "day", "requestday":
+				fmt.Println(value)
 				bApproved := strings.EqualFold(req.Status, "approved")
 				parts := strings.Split(value, "|")
 				lvDate, _ := time.Parse("2006-01-02", parts[0])
