@@ -1009,7 +1009,8 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 						lv.Code = code
 						if status == "" {
 							status = lv.Status
-						} else {
+						}
+						if workcenter != "" {
 							lv.Status = workcenter
 						}
 						if code == "" {
