@@ -969,7 +969,9 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 			case "requested":
 				req.Status = "REQUESTED"
 				for d, day := range req.RequestedDays {
-					day.Status = "REQUESTED"
+					if day.Status == "" {
+						day.Status = "REQUESTED"
+					}
 					req.RequestedDays[d] = day
 				}
 				message = fmt.Sprintf("Leave Request: Leave Request from %s ",
