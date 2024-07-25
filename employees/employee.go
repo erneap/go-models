@@ -845,70 +845,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 			case "code", "primarycode":
 				req.PrimaryCode = value
 				if strings.EqualFold(value, req.PrimaryCode) {
-					/*if strings.ToLower(value) == "mod" {
-						req.RequestedDays = req.RequestedDays[:0]
-						start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
-							req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
-						for start.Weekday() != time.Sunday {
-							start = start.AddDate(0, 0, -1)
-						}
-						end := time.Date(req.EndDate.Year(), req.EndDate.Month(),
-							req.EndDate.Day(), 0, 0, 0, 0, time.UTC)
-						for end.Weekday() != time.Saturday {
-							end = end.AddDate(0, 0, 1)
-						}
-						lastDay := e.GetLastWorkday()
-						count := -1
-						for start.Before(end) || start.Equal(end) {
-							count++
-							wd := e.GetWorkday(start, lastDay)
-							day := LeaveDay{
-								ID:        count,
-								LeaveDate: start,
-								Code:      wd.Code,
-								Hours:     wd.Hours,
-								Status:    wd.Workcenter,
-							}
-							req.RequestedDays = append(req.RequestedDays, day)
-							start = start.AddDate(0, 0, 1)
-						}
-					} else {
-						req.RequestedDays = req.RequestedDays[:0]
-						start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
-							req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
-						end := time.Date(req.EndDate.Year(), req.EndDate.Month(),
-							req.EndDate.Day(), 0, 0, 0, 0, time.UTC)
-						lastDay := e.GetLastWorkday()
-						count := -1
-						hours := e.GetStandardWorkday(start)
-						if strings.EqualFold(value, "h") {
-							hours = 8.0
-						}
-						for start.Before(end) || start.Equal(end) {
-							count++
-							wd := e.GetWorkday(start, lastDay)
-							if wd.Code != "" {
-								day := LeaveDay{
-									ID:        count,
-									LeaveDate: start,
-									Code:      value,
-									Hours:     hours,
-									Status:    "REQUESTED",
-								}
-								req.RequestedDays = append(req.RequestedDays, day)
-							} else {
-								day := LeaveDay{
-									ID:        count,
-									LeaveDate: start,
-									Code:      "",
-									Hours:     0.0,
-									Status:    "REQUESTED",
-								}
-								req.RequestedDays = append(req.RequestedDays, day)
-							}
-							start = start.AddDate(0, 0, 1)
-						}
-					}*/
 					req = e.resetLeaveDays(value, req)
 				}
 			case "dates":
@@ -1073,7 +1009,6 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 }
 
 func (e *Employee) resetLeaveDays(value string, req LeaveRequest) LeaveRequest {
-	fmt.Println(value)
 	if strings.ToLower(value) == "mod" {
 		req.RequestedDays = req.RequestedDays[:0]
 		start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
