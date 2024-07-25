@@ -1073,6 +1073,7 @@ func (e *Employee) UpdateLeaveRequest(request, field, value string,
 }
 
 func (e *Employee) resetLeaveDays(value string, req LeaveRequest) LeaveRequest {
+	fmt.Println(value)
 	if strings.ToLower(value) == "mod" {
 		req.RequestedDays = req.RequestedDays[:0]
 		start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
