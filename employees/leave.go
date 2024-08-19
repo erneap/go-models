@@ -45,7 +45,7 @@ type ByLeaveRequestComment []LeaveRequestComment
 
 func (c ByLeaveRequestComment) Len() int { return len(c) }
 func (c ByLeaveRequestComment) Less(i, j int) bool {
-	return c[i].CommentDate.Before(c[i].CommentDate)
+	return c[i].CommentDate.Before(c[j].CommentDate)
 }
 func (c ByLeaveRequestComment) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
