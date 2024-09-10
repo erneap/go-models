@@ -1187,7 +1187,8 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 						Site:      site,
 					}
 					vari.Schedule = Schedule{
-						ID: 0,
+						ID:        0,
+						ShowDates: true,
 					}
 					start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
 						req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
