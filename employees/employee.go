@@ -1258,10 +1258,12 @@ func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
 
 	// now add the leave request's leave days to the leave list. if now mod time
 	for _, lv := range lr.RequestedDays {
-		maxId++
-		lv.ID = maxId
-		lv.Status = lr.Status
-		e.Leaves = append(e.Leaves, lv)
+		if lv.Hours > 0.0 {
+			maxId++
+			lv.ID = maxId
+			lv.Status = lr.Status
+			e.Leaves = append(e.Leaves, lv)
+		}
 	}
 	sort.Sort(ByLeaveDay(e.Leaves))
 }
