@@ -72,3 +72,67 @@ func DeleteReport(id string) error {
 	_, err = rptCol.DeleteOne(context.TODO(), filter)
 	return err
 }
+
+func GetReport(id string) (*general.DBReport, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reports")
+
+	oId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"_id": oId,
+	}
+
+	var rpt *general.DBReport
+	err = rptCol.FindOne(context.TODO(), filter).Decode(&rpt)
+	if err != nil {
+		return nil, err
+	}
+	return rpt, nil
+}
+
+func GetReportsByType(app, rpttype string) ([]general.DBReport, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reports")
+
+	filter := bson.M{
+		"application": app,
+		"reporttype":  rpttype,
+	}
+
+	var rpts []general.DBReport
+
+	cursor, err := rptCol.Find(context.TODO(), filter)
+	if err != nil {
+		return rpts, err
+	}
+
+	if err = cursor.All(context.TODO(), &rpts); err != nil {
+		return rpts, err
+	}
+	return rpts, nil
+}
+
+func GetReportsBetweenDates(app string, date1, date2 time.Time) ([]general.DBReport, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reports")
+
+	filter := bson.M{
+		"application": app,
+		"reportdate": bson.M{ "$gte": primitive.NewDateTimeFromTime(date1),
+													"$lte": primitive.NewDateTimeFromTime(date2) 
+												},
+	}
+
+	var rpts []general.DBReport
+
+	cursor, err := rptCol.Find(context.TODO(), filter)
+	if err != nil {
+		return rpts, err
+	}
+
+	if err = cursor.All(context.TODO(), &rpts); err != nil {
+		return rpts, err
+	}
+	return rpts, nil
+}
