@@ -1470,6 +1470,16 @@ func (e *Employee) GetForecastHours(lCode labor.LaborCode,
 		sort.Sort(ByEmployeeWork(e.Work))
 		lastWork = e.Work[len(e.Work)-1].DateWorked
 	}
+	// check leave hours for actual being later than lastWork
+	if len(e.Leaves) > 0 {
+		sort.Sort(ByLeaveDay(e.Leaves))
+		for _, lv := range e.Leaves {
+			if strings.EqualFold(lv.Status, "actual") &&
+				lv.LeaveDate.After(lastWork) {
+				lastWork = lv.LeaveDate
+			}
+		}
+	}
 
 	// now step through the days of the period to:
 	// 1) see if they had worked any charge numbers during

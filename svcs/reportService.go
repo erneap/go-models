@@ -2,6 +2,7 @@ package svcs
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/erneap/go-models/config"
@@ -111,6 +112,7 @@ func GetReportsByType(app, rpttype string) ([]general.DBReport, error) {
 	if err = cursor.All(context.TODO(), &rpts); err != nil {
 		return rpts, err
 	}
+	sort.Sort(general.ByDBReports(rpts))
 	return rpts, nil
 }
 
@@ -119,9 +121,8 @@ func GetReportsBetweenDates(app string, date1, date2 time.Time) ([]general.DBRep
 
 	filter := bson.M{
 		"application": app,
-		"reportdate": bson.M{ "$gte": primitive.NewDateTimeFromTime(date1),
-													"$lte": primitive.NewDateTimeFromTime(date2) 
-												},
+		"reportdate": bson.M{"$gte": primitive.NewDateTimeFromTime(date1),
+			"$lte": primitive.NewDateTimeFromTime(date2.AddDate(0, 0, 1))},
 	}
 
 	var rpts []general.DBReport
@@ -134,5 +135,50 @@ func GetReportsBetweenDates(app string, date1, date2 time.Time) ([]general.DBRep
 	if err = cursor.All(context.TODO(), &rpts); err != nil {
 		return rpts, err
 	}
+	sort.Sort(general.ByDBReports(rpts))
+	return rpts, nil
+}
+
+func GetReportsByTypeAndDates(app string, date1, date2 time.Time) ([]general.DBReport, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reports")
+
+	filter := bson.M{
+		"application": app,
+		"reportdate": bson.M{"$gte": primitive.NewDateTimeFromTime(date1),
+			"$lt": primitive.NewDateTimeFromTime(date2.AddDate(0, 0, 1))},
+	}
+
+	var rpts []general.DBReport
+
+	cursor, err := rptCol.Find(context.TODO(), filter)
+	if err != nil {
+		return rpts, err
+	}
+
+	if err = cursor.All(context.TODO(), &rpts); err != nil {
+		return rpts, err
+	}
+	sort.Sort(general.ByDBReports(rpts))
+	return rpts, nil
+}
+
+func GetReportsAll(app string) ([]general.DBReport, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reports")
+
+	filter := bson.M{
+		"application": app,
+	}
+
+	var rpts []general.DBReport
+
+	cursor, err := rptCol.Find(context.TODO(), filter)
+	if err != nil {
+		return rpts, err
+	}
+
+	if err = cursor.All(context.TODO(), &rpts); err != nil {
+		return rpts, err
+	}
+	sort.Sort(general.ByDBReports(rpts))
 	return rpts, nil
 }
