@@ -2,6 +2,7 @@ package svcs
 
 import (
 	"context"
+	"sort"
 	"time"
 
 	"github.com/erneap/go-models/config"
@@ -82,4 +83,124 @@ func DeleteDBLogEntry(id string) error {
 
 	_, err = logCol.DeleteOne(context.TODO(), filter)
 	return err
+}
+
+func PurgeLogs(dt time.Time) error {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	filter := bson.M{
+		"entrydate": bson.M{"$lt": dt},
+	}
+
+	_, err := logCol.DeleteMany(context.TODO(), filter)
+	return err
+}
+
+func GetDBLogEntry(id string) (*general.LogEntry, error) {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	oId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"_id": oId,
+	}
+
+	var entry general.LogEntry
+	err = logCol.FindOne(context.TODO(), filter).Decode(&entry)
+	if err != nil {
+		return nil, err
+	}
+	return &entry, nil
+}
+
+func GetDBLogEntriesAll() ([]general.LogEntry, error) {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	filter := bson.M{}
+
+	var logs []general.LogEntry
+
+	cursor, err := logCol.Find(context.TODO(), filter)
+	if err != nil {
+		return logs, err
+	}
+
+	if err = cursor.All(context.TODO(), &logs); err != nil {
+		return logs, err
+	}
+	sort.Sort(general.ByLogEntries(logs))
+	return logs, nil
+}
+
+func GetDBLogEntriesByApplication(app string) ([]general.LogEntry, error) {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	filter := bson.M{
+		"application": app,
+	}
+
+	var logs []general.LogEntry
+
+	cursor, err := logCol.Find(context.TODO(), filter)
+	if err != nil {
+		return logs, err
+	}
+
+	if err = cursor.All(context.TODO(), &logs); err != nil {
+		return logs, err
+	}
+	sort.Sort(general.ByLogEntries(logs))
+	return logs, nil
+}
+
+func GetDBLogEntriesByApplicationCategory(app, cat string) ([]general.LogEntry, error) {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	filter := bson.M{
+		"application": app,
+		"category":    cat,
+	}
+
+	var logs []general.LogEntry
+
+	cursor, err := logCol.Find(context.TODO(), filter)
+	if err != nil {
+		return logs, err
+	}
+
+	if err = cursor.All(context.TODO(), &logs); err != nil {
+		return logs, err
+	}
+	sort.Sort(general.ByLogEntries(logs))
+	return logs, nil
+}
+
+func GetDBLogEntriesByApplicationCategoryBetweenDates(app, cat string, dt1,
+	dt2 time.Time) ([]general.LogEntry, error) {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	filter := bson.M{
+		"application": app,
+		"category":    cat,
+		"entrydate": bson.M{
+			"$gte": dt1,
+			"$lte": dt2,
+		},
+	}
+
+	var logs []general.LogEntry
+
+	cursor, err := logCol.Find(context.TODO(), filter)
+	if err != nil {
+		return logs, err
+	}
+
+	if err = cursor.All(context.TODO(), &logs); err != nil {
+		return logs, err
+	}
+	sort.Sort(general.ByLogEntries(logs))
+	return logs, nil
 }

@@ -74,6 +74,17 @@ func DeleteReport(id string) error {
 	return err
 }
 
+func PurgeReports(dt time.Time) error {
+	rptCol := config.GetCollection(config.DB, "general", "reports")
+
+	filter := bson.M{
+		"reportdate": bson.M{"$lt": dt},
+	}
+
+	_, err := rptCol.DeleteMany(context.TODO(), filter)
+	return err
+}
+
 func GetReport(id string) (*general.DBReport, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reports")
 
