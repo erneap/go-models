@@ -11,6 +11,27 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+func CreateDBLogEntryWithDate(dt time.Time, app, cat, title, name, msg string) (*general.LogEntry, error) {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	// new log entry
+	entry := &general.LogEntry{
+		ID:          primitive.NewObjectID(),
+		EntryDate:   dt,
+		Application: app,
+		Category:    cat,
+		Title:       title,
+		Name:        name,
+		Message:     msg,
+	}
+
+	_, err := logCol.InsertOne(context.TODO(), entry)
+	if err != nil {
+		return nil, err
+	}
+	return entry, nil
+}
+
 // CRUD Methods for this data collection
 func CreateDBLogEntry(app, cat, title, name, msg string) (*general.LogEntry, error) {
 	logCol := config.GetCollection(config.DB, "general", "logs")
