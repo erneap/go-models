@@ -30,7 +30,8 @@ func AddReport(app, rpttype, subtype, mimetype string, body []byte) *general.DBR
 	return rpt
 }
 
-func AddReportWith(dt time.Time, app, rpttype, subtype, mimetype string, body []byte) *general.DBReport {
+func AddReportWithDate(dt time.Time, app, rpttype, subtype,
+	mimetype string, body []byte) *general.DBReport {
 	now := time.Now().UTC()
 	rpt := &general.DBReport{
 		ID:            primitive.NewObjectID(),
