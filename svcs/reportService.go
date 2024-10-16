@@ -30,6 +30,25 @@ func AddReport(app, rpttype, subtype, mimetype string, body []byte) *general.DBR
 	return rpt
 }
 
+func AddReportWith(dt time.Time, app, rpttype, subtype, mimetype string, body []byte) *general.DBReport {
+	now := time.Now().UTC()
+	rpt := &general.DBReport{
+		ID:            primitive.NewObjectID(),
+		ReportDate:    now,
+		Application:   app,
+		ReportType:    rpttype,
+		ReportSubType: subtype,
+		MimeType:      mimetype,
+	}
+	rpt.SetDocument(body)
+
+	rptCol := config.GetCollection(config.DB, "general", "reports")
+
+	rptCol.InsertOne(context.TODO(), rpt)
+
+	return rpt
+}
+
 func UpdateReport(id, mimetype string, body []byte) (*general.DBReport, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reports")
 
