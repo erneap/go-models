@@ -2,6 +2,7 @@ package svcs
 
 import (
 	"context"
+	"fmt"
 	"sort"
 	"time"
 
@@ -210,6 +211,7 @@ func GetReportsAll(app string) ([]general.DBReport, error) {
 	if err = cursor.All(context.TODO(), &rpts); err != nil {
 		return rpts, err
 	}
+	fmt.Println(len(rpts))
 	sort.Sort(general.ByDBReports(rpts))
 	return rpts, nil
 }
