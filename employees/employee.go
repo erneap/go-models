@@ -1088,9 +1088,9 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 			req.ApprovedBy = value
 			req.ApprovalDate = time.Now().UTC()
 			req.Status = "APPROVED"
+			maxLvID := 0
 			// remove any leaves associated with this request
 			var deletes []int
-			maxLvID := 0
 			for l, lv := range e.Leaves {
 				if lv.RequestID == req.ID && strings.ToLower(lv.Status) != "actual" {
 					deletes = append(deletes, l)
@@ -1126,11 +1126,11 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 						for _, day := range req.RequestedDays {
 							isLeave := false
 							for _, wc := range leavecodes {
-								if strings.EqualFold(wc.Id, day.Code) {
+								if strings.EqualFold(wc.Id, day.Code) &&
+									wc.IsLeave {
 									isLeave = true
 								}
 							}
-							fmt.Println(isLeave)
 							if isLeave {
 								maxLvID++
 								lv := LeaveDay{
@@ -1167,8 +1167,6 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 						e.Variations[v] = vari
 					}
 				}
-				fmt.Print("Found: ")
-				fmt.Println(found)
 				// if no, create new variation
 				if !found {
 					site := e.SiteID
@@ -1190,13 +1188,19 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 						ID:        0,
 						ShowDates: true,
 					}
+					vari.Schedule.Workdays = vari.Schedule.Workdays[:0]
 					start := time.Date(req.StartDate.Year(), req.StartDate.Month(),
 						req.StartDate.Day(), 0, 0, 0, 0, time.UTC)
 					for start.Weekday() != time.Sunday {
 						start = start.AddDate(0, 0, -1)
 					}
+					end := time.Date(req.EndDate.Year(), req.EndDate.Month(),
+						req.EndDate.Day(), 0, 0, 0, 0, time.UTC)
+					for end.Weekday() != time.Saturday {
+						end = end.AddDate(0, 0, 1)
+					}
 					count := -1
-					for start.Before(req.EndDate) || start.Equal(req.EndDate) {
+					for start.Before(end) || start.Equal(end) {
 						count++
 						var day Workday
 						day.ID = uint(count)
