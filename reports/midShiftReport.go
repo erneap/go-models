@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/erneap/go-models/employees"
-	"github.com/erneap/scheduler2/schedulerApi/services"
+	"github.com/erneap/go-models/svcs"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -74,7 +74,7 @@ func (m *MidShiftReport) Create() error {
 	m.Styles = make(map[string]int)
 	m.Report = excelize.NewFile()
 
-	site, err := services.GetSite(m.TeamID, m.SiteID)
+	site, err := svcs.GetSite(m.TeamID, m.SiteID)
 	if err != nil {
 		return err
 	}

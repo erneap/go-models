@@ -9,8 +9,8 @@ import (
 
 	"github.com/erneap/go-models/employees"
 	"github.com/erneap/go-models/labor"
+	"github.com/erneap/go-models/svcs"
 	"github.com/erneap/go-models/teams"
-	"github.com/erneap/scheduler2/schedulerApi/services"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/exp/maps"
 )
@@ -135,7 +135,7 @@ func (lr *LeaveReport) Create() error {
 	// during the year.
 	startDate := time.Date(lr.Year, 1, 1, 0, 0, 0, 0, time.UTC)
 	endDate := time.Date(lr.Year, 12, 31, 23, 59, 59, 0, time.UTC)
-	emps, err := services.GetEmployeesForTeam(lr.TeamID)
+	emps, err := svcs.GetEmployeesForTeam(lr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -150,7 +150,7 @@ func (lr *LeaveReport) Create() error {
 
 	sort.Sort(employees.ByEmployees(lr.Employees))
 
-	team, err := services.GetTeam(lr.TeamID)
+	team, err := svcs.GetTeam(lr.TeamID)
 	if err != nil {
 		return err
 	}

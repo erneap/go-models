@@ -9,7 +9,7 @@ import (
 	"github.com/erneap/go-models/employees"
 	"github.com/erneap/go-models/labor"
 	"github.com/erneap/go-models/sites"
-	"github.com/erneap/scheduler2/schedulerApi/services"
+	"github.com/erneap/go-models/svcs"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -37,7 +37,7 @@ func (sr *EnterpriseSchedule) Create() error {
 	// during the year.
 	startDate := time.Date(sr.Year, 1, 1, 0, 0, 0, 0, time.UTC)
 	endDate := time.Date(sr.Year, 12, 31, 23, 59, 59, 0, time.UTC)
-	emps, err := services.GetEmployeesForTeam(sr.TeamID)
+	emps, err := svcs.GetEmployeesForTeam(sr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -46,7 +46,7 @@ func (sr *EnterpriseSchedule) Create() error {
 		if emp.AtSite(sr.SiteID, startDate, endDate) {
 			// get timecard data/work hours for each employee
 			// for time period.
-			wr, err := services.GetEmployeeWork(emp.ID.Hex(), uint(startDate.Year()))
+			wr, err := svcs.GetEmployeeWork(emp.ID.Hex(), uint(startDate.Year()))
 			if err == nil {
 				emp.Work = append(emp.Work, wr.Work...)
 				for _, wk := range wr.Work {
@@ -56,7 +56,7 @@ func (sr *EnterpriseSchedule) Create() error {
 				}
 			}
 			if startDate.Year() != endDate.Year() {
-				wr, err = services.GetEmployeeWork(emp.ID.Hex(), uint(endDate.Year()))
+				wr, err = svcs.GetEmployeeWork(emp.ID.Hex(), uint(endDate.Year()))
 				if err == nil {
 					emp.Work = append(emp.Work, wr.Work...)
 				}
@@ -66,7 +66,7 @@ func (sr *EnterpriseSchedule) Create() error {
 	}
 
 	// get the team's workcodes
-	team, err := services.GetTeam(sr.TeamID)
+	team, err := svcs.GetTeam(sr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -75,7 +75,7 @@ func (sr *EnterpriseSchedule) Create() error {
 	}
 
 	// get the site's workcenters
-	site, err := services.GetSite(sr.TeamID, sr.SiteID)
+	site, err := svcs.GetSite(sr.TeamID, sr.SiteID)
 	if err != nil {
 		return err
 	}
@@ -116,7 +116,7 @@ func (sr *EnterpriseSchedule) CreateStyles() error {
 	// styles for each one, plus one for weekend (non-leave), and
 	// even and odd non-leaves.  Also need style for month label and workcenter
 
-	team, err := services.GetTeam(sr.TeamID)
+	team, err := svcs.GetTeam(sr.TeamID)
 	if err != nil {
 		return err
 	}

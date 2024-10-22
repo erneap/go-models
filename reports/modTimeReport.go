@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/erneap/go-models/employees"
-	"github.com/erneap/scheduler2/schedulerApi/services"
+	"github.com/erneap/go-models/svcs"
 	"github.com/xuri/excelize/v2"
 )
 
@@ -69,7 +69,7 @@ func (lr *ModTimeReport) Create() error {
 		lr.Date.Day(), 0, 0, 0, 0, time.UTC)
 	lr.MaxDate = time.Date(lr.Date.Year(), lr.Date.Month(),
 		lr.Date.Day(), 0, 0, 0, 0, time.UTC)
-	team, err := services.GetTeam(lr.TeamID)
+	team, err := svcs.GetTeam(lr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -131,7 +131,7 @@ func (lr *ModTimeReport) Create() error {
 	// get employees with assignments for the site that are assigned
 	// during the mod period
 
-	emps, err := services.GetEmployeesForTeam(lr.TeamID)
+	emps, err := svcs.GetEmployeesForTeam(lr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (lr *ModTimeReport) Create() error {
 			strings.EqualFold(emp.CompanyInfo.Company, lr.CompanyID) {
 			// get work records for the year inclusive of the two
 			// dates
-			work, _ := services.GetEmployeeWork(emp.ID.Hex(),
+			work, _ := svcs.GetEmployeeWork(emp.ID.Hex(),
 				uint(lr.MinDate.Year()))
 			if work != nil {
 				emp.Work = append(emp.Work, work.Work...)
@@ -149,7 +149,7 @@ func (lr *ModTimeReport) Create() error {
 				year := lr.MinDate.Year()
 				for year < lr.MaxDate.Year() {
 					year++
-					work, _ = services.GetEmployeeWork(emp.ID.Hex(),
+					work, _ = svcs.GetEmployeeWork(emp.ID.Hex(),
 						uint(year))
 					if work != nil {
 						emp.Work = append(emp.Work, work.Work...)

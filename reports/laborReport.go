@@ -10,7 +10,7 @@ import (
 	"github.com/erneap/go-models/employees"
 	"github.com/erneap/go-models/labor"
 	"github.com/erneap/go-models/sites"
-	"github.com/erneap/scheduler2/schedulerApi/services"
+	"github.com/erneap/go-models/svcs"
 	"github.com/xuri/excelize/v2"
 	"golang.org/x/exp/maps"
 )
@@ -46,7 +46,7 @@ func (lr *LaborReport) Create() error {
 		lr.Date.Day(), 0, 0, 0, 0, time.UTC)
 	maxDate := time.Date(lr.Date.Year(), lr.Date.Month(),
 		lr.Date.Day(), 0, 0, 0, 0, time.UTC)
-	site, err := services.GetSite(lr.TeamID, lr.SiteID)
+	site, err := svcs.GetSite(lr.TeamID, lr.SiteID)
 	if err != nil {
 		return err
 	}
@@ -72,7 +72,7 @@ func (lr *LaborReport) Create() error {
 	}
 
 	// Get the team's workcodes
-	team, err := services.GetTeam(lr.TeamID)
+	team, err := svcs.GetTeam(lr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -88,7 +88,7 @@ func (lr *LaborReport) Create() error {
 	// get employees with assignments for the site that are assigned
 	// during the forecast period.
 
-	emps, err := services.GetEmployeesForTeam(lr.TeamID)
+	emps, err := svcs.GetEmployeesForTeam(lr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -96,7 +96,7 @@ func (lr *LaborReport) Create() error {
 		if emp.AtSite(lr.SiteID, minDate, maxDate) {
 			// get work records for the year inclusive of the two
 			// dates
-			work, _ := services.GetEmployeeWork(emp.ID.Hex(),
+			work, _ := svcs.GetEmployeeWork(emp.ID.Hex(),
 				uint(minDate.Year()))
 			if work != nil {
 				emp.Work = append(emp.Work, work.Work...)
@@ -105,7 +105,7 @@ func (lr *LaborReport) Create() error {
 				year := minDate.Year()
 				for year < maxDate.Year() {
 					year++
-					work, _ = services.GetEmployeeWork(emp.ID.Hex(),
+					work, _ = svcs.GetEmployeeWork(emp.ID.Hex(),
 						uint(year))
 					if work != nil {
 						emp.Work = append(emp.Work, work.Work...)

@@ -12,8 +12,8 @@ import (
 	"github.com/erneap/go-models/employees"
 	"github.com/erneap/go-models/labor"
 	"github.com/erneap/go-models/sites"
+	"github.com/erneap/go-models/svcs"
 	"github.com/erneap/go-models/teams"
-	"github.com/erneap/scheduler2/schedulerApi/services"
 )
 
 type ReportCofS struct {
@@ -37,7 +37,7 @@ type ReportCofS struct {
 // //////////////////////////////////////////////////////////
 func (cr *ReportCofS) Create() error {
 	// First get the site based on teamid and siteid
-	site, err := services.GetSite(cr.TeamID, cr.SiteID)
+	site, err := svcs.GetSite(cr.TeamID, cr.SiteID)
 	if err != nil {
 		return err
 	}
@@ -47,7 +47,7 @@ func (cr *ReportCofS) Create() error {
 	// the team
 	cr.Companies = make(map[string]teams.Company)
 	cr.LeaveCodes = make(map[string]labor.Workcode)
-	team, err := services.GetTeam(cr.TeamID)
+	team, err := svcs.GetTeam(cr.TeamID)
 	if err != nil {
 		return err
 	}
@@ -63,7 +63,7 @@ func (cr *ReportCofS) Create() error {
 	// get workrecords for employees
 	for e, emp := range cr.Site.Employees {
 		emp.Work = emp.Work[:0]
-		work, err := services.GetEmployeeWork(emp.ID.Hex(),
+		work, err := svcs.GetEmployeeWork(emp.ID.Hex(),
 			uint(cr.Date.Year()))
 		if err == nil {
 			emp.Work = append(emp.Work, work.Work...)
