@@ -14,6 +14,7 @@ type ReportType struct {
 	ReportType     string             `json:"reporttype" bson:"reporttype"`
 	ReportTypeName string             `json:"name" bson:"name"`
 	SubTypes       []string           `json:"subtypes,omitempty" bson:"subtypes,omitempty"`
+	Reports        []DBReport         `json:"reports,omitempty" bson:"-"`
 }
 
 type ByReportTypes []ReportType
