@@ -221,7 +221,7 @@ func GetReportsAll(app string) ([]general.DBReport, error) {
 }
 
 // CRUD methods for report types
-func CreateReportType(app, rpttype string, subtypes []string) (*general.ReportType, error) {
+func CreateReportType(app, name, rpttype string, subtypes []string) (*general.ReportType, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
 
 	rpt := &general.ReportType{
@@ -238,7 +238,8 @@ func CreateReportType(app, rpttype string, subtypes []string) (*general.ReportTy
 	return rpt, nil
 }
 
-func UpdateReportType(id, app, rpttype string, subtypes []string) (*general.ReportType, error) {
+func UpdateReportType(id, app, name, rpttype string,
+	subtypes []string) (*general.ReportType, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
 
 	oID, err := primitive.ObjectIDFromHex(id)
