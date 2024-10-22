@@ -225,9 +225,11 @@ func CreateReportType(app, name, rpttype string, subtypes []string) (*general.Re
 	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
 
 	rpt := &general.ReportType{
-		ID:         primitive.NewObjectID(),
-		ReportType: rpttype,
-		SubTypes:   subtypes,
+		ID:             primitive.NewObjectID(),
+		Application:    app,
+		ReportTypeName: name,
+		ReportType:     rpttype,
+		SubTypes:       subtypes,
 	}
 
 	_, err := rptCol.InsertOne(context.TODO(), rpt)
@@ -258,6 +260,7 @@ func UpdateReportType(id, app, name, rpttype string,
 	}
 
 	rpt.Application = app
+	rpt.ReportTypeName = name
 	rpt.ReportType = rpttype
 	rpt.SubTypes = subtypes
 
