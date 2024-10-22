@@ -199,12 +199,10 @@ func GetReportsByTypeAndDates(app string, date1, date2 time.Time) ([]general.DBR
 	return rpts, nil
 }
 
-func GetReportsAll(app string) ([]general.DBReport, error) {
+func GetReportsAll() ([]general.DBReport, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reports")
 
-	filter := bson.M{
-		"application": app,
-	}
+	filter := bson.M{}
 
 	var rpts []general.DBReport
 
