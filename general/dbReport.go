@@ -65,3 +65,13 @@ func (r DBReport) GetDocument() ([]byte, error) {
 	}
 	return uDec, nil
 }
+
+type ReportRequest struct {
+	ReportType string `json:"reportType"`
+	Period     string `json:"period,omitempty"`
+	SubReport  string `json:"subreport,omitempty"`
+	TeamID     string `json:"teamid"`
+	SiteID     string `json:"siteid"`
+	CompanyID  string `json:"companyid,omitempty"`
+	Password   string `json:"password,omitempty"`
+}
