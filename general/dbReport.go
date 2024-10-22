@@ -9,10 +9,11 @@ import (
 )
 
 type ReportType struct {
-	ID          primitive.ObjectID `json:"id" bson:"_id"`
-	Application string             `json:"application" bson:"application"`
-	ReportType  string             `json:"reporttype" bson:"reporttype"`
-	SubTypes    []string           `json:"subtypes,omitempty" bson:"subtypes,omitempty"`
+	ID             primitive.ObjectID `json:"id" bson:"_id"`
+	Application    string             `json:"application" bson:"application"`
+	ReportType     string             `json:"reporttype" bson:"reporttype"`
+	ReportTypeName string             `json:"name" bson:"name"`
+	SubTypes       []string           `json:"subtypes,omitempty" bson:"subtypes,omitempty"`
 }
 
 type ByReportTypes []ReportType
