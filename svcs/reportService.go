@@ -11,13 +11,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-func AddReport(app, rpttype, subtype, mimetype string, body []byte) *general.DBReport {
+func AddReport(typeid, subtype, mimetype string, body []byte) (*general.DBReport, error) {
 	now := time.Now().UTC()
+	oTypeID, err := primitive.ObjectIDFromHex(typeid)
+	if err != nil {
+		return nil, err
+	}
 	rpt := &general.DBReport{
 		ID:            primitive.NewObjectID(),
 		ReportDate:    now,
-		Application:   app,
-		ReportType:    rpttype,
+		ReportTypeID:  oTypeID,
 		ReportSubType: subtype,
 		MimeType:      mimetype,
 	}
@@ -27,17 +30,20 @@ func AddReport(app, rpttype, subtype, mimetype string, body []byte) *general.DBR
 
 	rptCol.InsertOne(context.TODO(), rpt)
 
-	return rpt
+	return rpt, nil
 }
 
-func AddReportWithDate(dt time.Time, app, rpttype, subtype,
-	mimetype string, body []byte) *general.DBReport {
+func AddReportWithDate(dt time.Time, typeid, subtype,
+	mimetype string, body []byte) (*general.DBReport, error) {
 	now := time.Now().UTC()
+	oTypeID, err := primitive.ObjectIDFromHex(typeid)
+	if err != nil {
+		return nil, err
+	}
 	rpt := &general.DBReport{
 		ID:            primitive.NewObjectID(),
 		ReportDate:    now,
-		Application:   app,
-		ReportType:    rpttype,
+		ReportTypeID:  oTypeID,
 		ReportSubType: subtype,
 		MimeType:      mimetype,
 	}
@@ -47,7 +53,7 @@ func AddReportWithDate(dt time.Time, app, rpttype, subtype,
 
 	rptCol.InsertOne(context.TODO(), rpt)
 
-	return rpt
+	return rpt, nil
 }
 
 func UpdateReport(id, mimetype string, body []byte) (*general.DBReport, error) {
@@ -212,4 +218,114 @@ func GetReportsAll(app string) ([]general.DBReport, error) {
 	}
 	sort.Sort(general.ByDBReports(rpts))
 	return rpts, nil
+}
+
+// CRUD methods for report types
+func CreateReportType(app, rpttype string, subtypes []string) (*general.ReportType, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
+
+	rpt := &general.ReportType{
+		ID:         primitive.NewObjectID(),
+		ReportType: rpttype,
+		SubTypes:   subtypes,
+	}
+
+	_, err := rptCol.InsertOne(context.TODO(), rpt)
+	if err != nil {
+		return nil, err
+	}
+
+	return rpt, nil
+}
+
+func UpdateReportType(id, app, rpttype string, subtypes []string) (*general.ReportType, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
+
+	oID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"_id": oID,
+	}
+
+	var rpt general.ReportType
+	err = rptCol.FindOne(context.TODO(), filter).Decode(&rpt)
+	if err != nil {
+		return nil, err
+	}
+
+	rpt.Application = app
+	rpt.ReportType = rpttype
+	rpt.SubTypes = subtypes
+
+	_, err = rptCol.ReplaceOne(context.TODO(), filter, rpt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &rpt, nil
+}
+
+func DeleteReportType(id string) error {
+	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
+
+	oID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return err
+	}
+
+	filter := bson.M{
+		"_id": oID,
+	}
+
+	_, err = rptCol.DeleteOne(context.TODO(), filter)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func GetReportTypes() ([]general.ReportType, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
+
+	filter := bson.M{}
+
+	var rpts []general.ReportType
+
+	cursor, err := rptCol.Find(context.TODO(), filter)
+	if err != nil {
+		return rpts, err
+	}
+
+	if err = cursor.All(context.TODO(), &rpts); err != nil {
+		return rpts, err
+	}
+	sort.Sort(general.ByReportTypes(rpts))
+	return rpts, nil
+
+}
+
+func GetReportTypesByApplication(app string) ([]general.ReportType, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
+
+	filter := bson.M{
+		"application": app,
+	}
+
+	var rpts []general.ReportType
+
+	cursor, err := rptCol.Find(context.TODO(), filter)
+	if err != nil {
+		return rpts, err
+	}
+
+	if err = cursor.All(context.TODO(), &rpts); err != nil {
+		return rpts, err
+	}
+	sort.Sort(general.ByReportTypes(rpts))
+	return rpts, nil
+
 }
