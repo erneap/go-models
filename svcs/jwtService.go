@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/erneap/go-models/logs"
 	"github.com/erneap/go-models/users"
 	"github.com/gin-gonic/gin"
 	"github.com/golang-jwt/jwt"
@@ -68,24 +67,27 @@ func GetRequestor(context *gin.Context) string {
 func CheckJWT(app string) gin.HandlerFunc {
 	return func(context *gin.Context) {
 		tokenString := context.GetHeader("Authorization")
+		userID := GetRequestor(context)
+		user, _ := GetUserByID(userID)
 		if tokenString == "" {
-			AddLogEntry(app, logs.Minimal,
-				"CheckJWT: No Authentication Token passed")
+			CreateDBLogEntry("authentication", app, "CheckJWT Error", "",
+				"No Authentication Token Passed")
 			context.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			context.Abort()
 			return
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			AddLogEntry(app, logs.Minimal, "CheckJWT: Validation Error: "+
-				err.Error())
+			CreateDBLogEntry("authentication", app, "CheckJWT Error", user.LastName,
+				"Validation Error")
 			context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			context.Abort()
 			return
 		}
 
 		// replace token by passing a new token in the response header
-		AddLogEntry(app, logs.Debug, "CheckJWT: Token Verified")
+		CreateDBLogEntry("authentication", app, "CheckJWT", user.LastName,
+			"Token Verified")
 		id, _ := primitive.ObjectIDFromHex(claims.UserID)
 		tokenString, _ = CreateToken(id, claims.EmailAddress)
 		context.Writer.Header().Set("Token", tokenString)
@@ -97,31 +99,32 @@ func CheckRole(prog, role string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			AddLogEntry(prog, logs.Minimal,
-				"CheckRole: No Authentication Token passed")
+			CreateDBLogEntry("authentication", prog, "CheckRole Error", "",
+				"No Authentication Token Passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
 			return
 		}
-		claims, err := ValidateToken(tokenString)
+		_, err := ValidateToken(tokenString)
+		userID := GetRequestor(c)
+		user, err2 := GetUserByID(userID)
 		if err != nil {
-			AddLogEntry(prog, logs.Minimal, "CheckRole: Validation Error: "+
-				err.Error())
+			CreateDBLogEntry("authentication", prog, "CheckRole Error", user.LastName,
+				"Validation Error")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
-		user, err := GetUserByID(claims.UserID)
-		if err != nil {
-			AddLogEntry(prog, logs.Minimal, "CheckRole: User Not Found: "+
-				err.Error())
+		if err2 != nil {
+			CreateDBLogEntry("authentication", prog, "CheckRole Error", userID,
+				"User Not Found")
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
 		}
 		if !user.IsInGroup(prog, role) {
-			AddLogEntry(prog, logs.Minimal, "CheckRole: User Not in Group: "+
-				user.LastName)
+			CreateDBLogEntry("authentication", prog, "CheckRole Error", user.LastName,
+				"User Not In Group")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
 			return
@@ -134,24 +137,24 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			AddLogEntry(prog, logs.Minimal,
-				"CheckRoles: No Authentication Token passed")
+			CreateDBLogEntry("authentication", prog, "CheckRoles Error", "",
+				"No Authentication Token passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
 			return
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			AddLogEntry(prog, logs.Minimal, "CheckRoles: Validation Error: "+
-				err.Error())
+			CreateDBLogEntry("authentication", prog, "CheckRoles Error", "",
+				"Validation error")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
-			AddLogEntry(prog, logs.Minimal, "CheckRoles: User Not Found: "+
-				err.Error())
+			CreateDBLogEntry("authentication", prog, "CheckRoles Error", claims.UserID,
+				"User Not Found")
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
@@ -163,8 +166,8 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 			}
 		}
 		if !inRole {
-			AddLogEntry(prog, logs.Minimal, "CheckRoles: User Not In Group: "+
-				user.LastName)
+			CreateDBLogEntry("authentication", prog, "CheckRoles Error", user.LastName,
+				"User not in Groups")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
 			return
@@ -177,24 +180,24 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
-			AddLogEntry(app, logs.Minimal,
-				"CheckRoleList: No Authentication Token passed")
+			CreateDBLogEntry("authentication", app, "CheckRoleList Error", "",
+				"No Authentication Token passed")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
 			return
 		}
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
-			AddLogEntry(app, logs.Minimal,
-				"CheckRoleList: Validation Error: "+err.Error())
+			CreateDBLogEntry("authentication", app, "CheckRoleList Error", "",
+				"Validation Error: "+err.Error())
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
-			AddLogEntry(app, logs.Minimal, "CheckRoleList: User Not Found: "+
-				err.Error())
+			CreateDBLogEntry("authentication", app, "CheckRoleList Error", claims.UserID,
+				"User Not Found: "+err.Error())
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
@@ -207,8 +210,8 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 			}
 		}
 		if !inRole {
-			AddLogEntry(app, logs.Minimal,
-				"CheckRoleList: User not in any of the roles provided: "+user.LastName)
+			CreateDBLogEntry("authentication", app, "CheckRoleList Error", user.LastName,
+				"User Not in list of roles provided")
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
 			return
