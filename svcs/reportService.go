@@ -131,12 +131,15 @@ func GetReport(id string) (*general.DBReport, error) {
 	return rpt, nil
 }
 
-func GetReportsByType(app, rpttype string) ([]general.DBReport, error) {
+func GetReportsByType(id string) ([]general.DBReport, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reports")
+	oTypeID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
 
 	filter := bson.M{
-		"application": app,
-		"reporttype":  rpttype,
+		"reporttypeid": oTypeID,
 	}
 
 	var rpts []general.DBReport
@@ -153,11 +156,10 @@ func GetReportsByType(app, rpttype string) ([]general.DBReport, error) {
 	return rpts, nil
 }
 
-func GetReportsBetweenDates(app string, date1, date2 time.Time) ([]general.DBReport, error) {
+func GetReportsBetweenDates(date1, date2 time.Time) ([]general.DBReport, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reports")
 
 	filter := bson.M{
-		"application": app,
 		"reportdate": bson.M{"$gte": primitive.NewDateTimeFromTime(date1),
 			"$lte": primitive.NewDateTimeFromTime(date2.AddDate(0, 0, 1))},
 	}
@@ -176,11 +178,14 @@ func GetReportsBetweenDates(app string, date1, date2 time.Time) ([]general.DBRep
 	return rpts, nil
 }
 
-func GetReportsByTypeAndDates(app string, date1, date2 time.Time) ([]general.DBReport, error) {
+func GetReportsByTypeAndDates(id string, date1, date2 time.Time) ([]general.DBReport, error) {
 	rptCol := config.GetCollection(config.DB, "general", "reports")
-
+	oTypeID, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
 	filter := bson.M{
-		"application": app,
+		"reporttypeid": oTypeID.IsZero(),
 		"reportdate": bson.M{"$gte": primitive.NewDateTimeFromTime(date1),
 			"$lt": primitive.NewDateTimeFromTime(date2.AddDate(0, 0, 1))},
 	}
