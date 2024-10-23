@@ -188,6 +188,32 @@ func GetDBLogEntriesByApplication(app string) ([]general.LogEntry, error) {
 	return logs, nil
 }
 
+func GetDBLogEntriesByApplicationBetweenDates(app string, dt1,
+	dt2 time.Time) ([]general.LogEntry, error) {
+	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	filter := bson.M{
+		"application": app,
+		"entrydate": bson.M{
+			"$gte": dt1,
+			"$lte": dt2,
+		},
+	}
+
+	var logs []general.LogEntry
+
+	cursor, err := logCol.Find(context.TODO(), filter)
+	if err != nil {
+		return logs, err
+	}
+
+	if err = cursor.All(context.TODO(), &logs); err != nil {
+		return logs, err
+	}
+	sort.Sort(general.ByLogEntries(logs))
+	return logs, nil
+}
+
 func GetDBLogEntriesByApplicationCategory(app, cat string) ([]general.LogEntry, error) {
 	logCol := config.GetCollection(config.DB, "general", "logs")
 
