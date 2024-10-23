@@ -184,7 +184,7 @@ func GetReportsByTypeAndDates(id string, date1, date2 time.Time) ([]general.DBRe
 		return nil, err
 	}
 	filter := bson.M{
-		"reporttypeid": oTypeID.IsZero(),
+		"reporttypeid": oTypeID,
 		"reportdate": bson.M{"$gte": primitive.NewDateTimeFromTime(date1),
 			"$lt": primitive.NewDateTimeFromTime(date2.AddDate(0, 0, 1))},
 	}
