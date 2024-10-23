@@ -71,7 +71,7 @@ func CheckJWT(app string) gin.HandlerFunc {
 		user, _ := GetUserByID(userID)
 		if tokenString == "" {
 			CreateDBLogEntry("authentication", app, "CheckJWT Error", "",
-				"No Authentication Token Passed")
+				"No Authentication Token Passed", context)
 			context.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			context.Abort()
 			return
@@ -79,7 +79,7 @@ func CheckJWT(app string) gin.HandlerFunc {
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
 			CreateDBLogEntry("authentication", app, "CheckJWT Error", user.LastName,
-				"Validation Error")
+				"Validation Error", context)
 			context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			context.Abort()
 			return
@@ -87,7 +87,7 @@ func CheckJWT(app string) gin.HandlerFunc {
 
 		// replace token by passing a new token in the response header
 		CreateDBLogEntry("authentication", app, "CheckJWT", user.LastName,
-			"Token Verified")
+			"Token Verified", context)
 		id, _ := primitive.ObjectIDFromHex(claims.UserID)
 		tokenString, _ = CreateToken(id, claims.EmailAddress)
 		context.Writer.Header().Set("Token", tokenString)
@@ -100,7 +100,7 @@ func CheckRole(prog, role string) gin.HandlerFunc {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
 			CreateDBLogEntry("authentication", prog, "CheckRole Error", "",
-				"No Authentication Token Passed")
+				"No Authentication Token Passed", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
 			return
@@ -110,21 +110,21 @@ func CheckRole(prog, role string) gin.HandlerFunc {
 		user, err2 := GetUserByID(userID)
 		if err != nil {
 			CreateDBLogEntry("authentication", prog, "CheckRole Error", user.LastName,
-				"Validation Error")
+				"Validation Error", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
 		}
 		if err2 != nil {
 			CreateDBLogEntry("authentication", prog, "CheckRole Error", userID,
-				"User Not Found")
+				"User Not Found", c)
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
 		}
 		if !user.IsInGroup(prog, role) {
 			CreateDBLogEntry("authentication", prog, "CheckRole Error", user.LastName,
-				"User Not In Group")
+				"User Not In Group", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
 			return
@@ -138,7 +138,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
 			CreateDBLogEntry("authentication", prog, "CheckRoles Error", "",
-				"No Authentication Token passed")
+				"No Authentication Token passed", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
 			return
@@ -146,7 +146,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
 			CreateDBLogEntry("authentication", prog, "CheckRoles Error", "",
-				"Validation error")
+				"Validation error", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
@@ -154,7 +154,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
 			CreateDBLogEntry("authentication", prog, "CheckRoles Error", claims.UserID,
-				"User Not Found")
+				"User Not Found", c)
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
@@ -167,7 +167,7 @@ func CheckRoles(prog string, roles []string) gin.HandlerFunc {
 		}
 		if !inRole {
 			CreateDBLogEntry("authentication", prog, "CheckRoles Error", user.LastName,
-				"User not in Groups")
+				"User not in Groups", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
 			return
@@ -181,7 +181,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 		tokenString := c.GetHeader("Authorization")
 		if tokenString == "" {
 			CreateDBLogEntry("authentication", app, "CheckRoleList Error", "",
-				"No Authentication Token passed")
+				"No Authentication Token passed", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "request does not contain an access token"})
 			c.Abort()
 			return
@@ -189,7 +189,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 		claims, err := ValidateToken(tokenString)
 		if err != nil {
 			CreateDBLogEntry("authentication", app, "CheckRoleList Error", "",
-				"Validation Error: "+err.Error())
+				"Validation Error: "+err.Error(), c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 			c.Abort()
 			return
@@ -197,7 +197,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 		user, err := GetUserByID(claims.UserID)
 		if err != nil {
 			CreateDBLogEntry("authentication", app, "CheckRoleList Error", claims.UserID,
-				"User Not Found: "+err.Error())
+				"User Not Found: "+err.Error(), c)
 			c.JSON(http.StatusNotFound, gin.H{"error": "user not found: " + err.Error()})
 			c.Abort()
 			return
@@ -211,7 +211,7 @@ func CheckRoleList(app string, roles []string) gin.HandlerFunc {
 		}
 		if !inRole {
 			CreateDBLogEntry("authentication", app, "CheckRoleList Error", user.LastName,
-				"User Not in list of roles provided")
+				"User Not in list of roles provided", c)
 			c.JSON(http.StatusUnauthorized, gin.H{"error": "user not in group"})
 			c.Abort()
 			return

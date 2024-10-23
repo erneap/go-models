@@ -7,6 +7,7 @@ import (
 
 	"github.com/erneap/go-models/config"
 	"github.com/erneap/go-models/general"
+	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -33,8 +34,18 @@ func CreateDBLogEntryWithDate(dt time.Time, app, cat, title, name, msg string) (
 }
 
 // CRUD Methods for this data collection
-func CreateDBLogEntry(app, cat, title, name, msg string) (*general.LogEntry, error) {
+func CreateDBLogEntry(app, cat, title, name, msg string, c *gin.Context) (*general.LogEntry, error) {
 	logCol := config.GetCollection(config.DB, "general", "logs")
+
+	if name == "" && c != nil {
+		userid := GetRequestor(c)
+		if userid != "" {
+			user, _ := GetUserByID(userid)
+			if user != nil {
+				name = user.LastName
+			}
+		}
+	}
 
 	// new log entry
 	entry := &general.LogEntry{
