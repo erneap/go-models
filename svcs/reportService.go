@@ -331,3 +331,21 @@ func GetReportTypesByApplication(app string) ([]general.ReportType, error) {
 	return rpts, nil
 
 }
+
+func GetReportType(id string) (*general.ReportType, error) {
+	rptCol := config.GetCollection(config.DB, "general", "reporttypes")
+	oId, err := primitive.ObjectIDFromHex(id)
+	if err != nil {
+		return nil, err
+	}
+
+	filter := bson.M{
+		"_id": oId,
+	}
+	var rpt general.ReportType
+	err = rptCol.FindOne(context.TODO(), filter).Decode(&rpt)
+	if err != nil {
+		return nil, err
+	}
+	return &rpt, nil
+}
