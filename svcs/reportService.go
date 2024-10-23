@@ -35,14 +35,13 @@ func AddReport(typeid, subtype, mimetype string, body []byte) (*general.DBReport
 
 func AddReportWithDate(dt time.Time, typeid, subtype,
 	mimetype string, body []byte) (*general.DBReport, error) {
-	now := time.Now().UTC()
 	oTypeID, err := primitive.ObjectIDFromHex(typeid)
 	if err != nil {
 		return nil, err
 	}
 	rpt := &general.DBReport{
 		ID:            primitive.NewObjectID(),
-		ReportDate:    now,
+		ReportDate:    dt,
 		ReportTypeID:  oTypeID,
 		ReportSubType: subtype,
 		MimeType:      mimetype,
