@@ -246,17 +246,27 @@ func (e *Employee) GetWorkday(date, lastWork time.Time) *Workday {
 	return wkday
 }
 
-func (e *Employee) GetWorkdayActual(date time.Time) *Workday {
+func (e *Employee) GetWorkdayActual(date time.Time,
+	labor []EmployeeLaborCode) *Workday {
 	if e.Data != nil {
 		e.ConvertFromData()
 	}
 	var wkday *Workday = nil
 	var siteid string = ""
+	bPrimary := false
 	for _, asgmt := range e.Assignments {
 		if (asgmt.StartDate.Before(date) || asgmt.StartDate.Equal(date)) &&
 			(asgmt.EndDate.After(date) || asgmt.EndDate.Equal(date)) {
 			siteid = asgmt.Site
 			wkday = asgmt.GetWorkday(date)
+			for _, lc := range labor {
+				for _, alc := range asgmt.LaborCodes {
+					if strings.EqualFold(lc.ChargeNumber, alc.ChargeNumber) &&
+						strings.EqualFold(lc.Extension, alc.Extension) {
+						bPrimary = true
+					}
+				}
+			}
 		}
 	}
 	for _, vari := range e.Variations {
@@ -266,23 +276,25 @@ func (e *Employee) GetWorkdayActual(date time.Time) *Workday {
 		}
 	}
 	bLeave := false
-	for _, lv := range e.Leaves {
-		if lv.LeaveDate.Equal(date) &&
-			strings.EqualFold(lv.Status, "actual") {
-			if !bLeave {
-				wkday = &Workday{
-					ID:         uint(0),
-					Workcenter: "",
-					Code:       lv.Code,
-					Hours:      lv.Hours,
-				}
-				bLeave = true
-			} else {
-				if lv.Hours <= wkday.Hours {
-					wkday.Hours += lv.Hours
+	if bPrimary || len(labor) == 0 {
+		for _, lv := range e.Leaves {
+			if lv.LeaveDate.Equal(date) &&
+				strings.EqualFold(lv.Status, "actual") {
+				if !bLeave {
+					wkday = &Workday{
+						ID:         uint(0),
+						Workcenter: "",
+						Code:       lv.Code,
+						Hours:      lv.Hours,
+					}
+					bLeave = true
 				} else {
-					wkday.Hours += lv.Hours
-					wkday.Code = lv.Code
+					if lv.Hours <= wkday.Hours {
+						wkday.Hours += lv.Hours
+					} else {
+						wkday.Hours += lv.Hours
+						wkday.Code = lv.Code
+					}
 				}
 			}
 		}
