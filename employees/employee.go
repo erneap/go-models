@@ -1105,7 +1105,9 @@ func (e *Employee) ApproveLeaveRequest(request, field, value string,
 			// remove any leaves associated with this request
 			var deletes []int
 			for l, lv := range e.Leaves {
-				if lv.RequestID == req.ID && strings.ToLower(lv.Status) != "actual" {
+				if strings.ToLower(lv.Status) != "actual" && (lv.RequestID == req.ID ||
+					((lv.LeaveDate.Equal(req.StartDate) || lv.LeaveDate.Equal(req.EndDate)) ||
+						(lv.LeaveDate.After(req.StartDate) && lv.LeaveDate.Before(req.EndDate)))) {
 					deletes = append(deletes, l)
 				}
 				if lv.ID > maxLvID {
@@ -1279,6 +1281,7 @@ func (e *Employee) ChangeApprovedLeaveDates(lr LeaveRequest) {
 			maxId++
 			lv.ID = maxId
 			lv.Status = lr.Status
+			lv.RequestID = lr.ID
 			e.Leaves = append(e.Leaves, lv)
 		}
 	}
