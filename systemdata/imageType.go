@@ -1,11 +1,11 @@
 package systemdata
 
 type ImageType struct {
-	ID           string      `json:"id"`
-	Collected    uint        `json:"collected,omitempty"`
-	NotCollected uint        `json:"notcollected,omitempty"`
-	SortID       uint        `json:"sortID"`
-	Subtypes     []ImageType `json:"subtypes,omitempty"`
+	ID           string      `json:"id" bson:"id"`
+	Collected    uint        `json:"collected,omitempty" bson:"collected,omitempty"`
+	NotCollected uint        `json:"notcollected,omitempty" bson:"notcollected,omitempty"`
+	SortID       uint        `json:"sortID" bson:"sortID"`
+	Subtypes     []ImageType `json:"subtypes,omitempty" bson:"subtypes,omitempty"`
 }
 
 type ByImageType []ImageType

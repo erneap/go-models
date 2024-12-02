@@ -5,18 +5,18 @@ import (
 )
 
 type SensorStandardTimes struct {
-	PreflightMinutes  uint `json:"preflightMinutes"`
-	ScheduledMinutes  uint `json:"scheduledMinutes"`
-	PostflightMinutes uint `json:"postflightMinutes"`
+	PreflightMinutes  uint `json:"preflightMinutes" bson:"preflightMinutes"`
+	ScheduledMinutes  uint `json:"scheduledMinutes" bson:"scheduledMinutes"`
+	PostflightMinutes uint `json:"postflightMinutes" bson:"postflightMinutes"`
 }
 
 type SensorExploitation struct {
-	Exploitation  string              `json:"exploitation"`
-	ShowOnGEOINT  bool                `json:"showOnGEOINT"`
-	ShowOnGSEG    bool                `json:"showOnGSEG"`
-	ShowOnMIST    bool                `json:"showOnMIST"`
-	ShowOnXINT    bool                `json:"showOnXINT"`
-	StandardTimes SensorStandardTimes `json:"standardTimes"`
+	Exploitation  string              `json:"exploitation" bson:"exploitation"`
+	ShowOnGEOINT  bool                `json:"showOnGEOINT" bson:"showOnGEOINT"`
+	ShowOnGSEG    bool                `json:"showOnGSEG" bson:"showOnGSEG"`
+	ShowOnMIST    bool                `json:"showOnMIST" bson:"showOnMIST"`
+	ShowOnXINT    bool                `json:"showOnXINT" bson:"showOnXINT"`
+	StandardTimes SensorStandardTimes `json:"standardTimes" bson:"standardTimes"`
 }
 
 type BySensorExploitations []SensorExploitation

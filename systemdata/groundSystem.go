@@ -1,10 +1,10 @@
 package systemdata
 
 type GroundSystemExploitation struct {
-	PlatformID      string `json:"platformID"`
-	SensorType      string `json:"sensorType"`
-	Exploitation    string `json:"exploitation"`
-	CommunicationID string `json:"communicationID"`
+	PlatformID      string `json:"platformID" bson:"platformID"`
+	SensorType      string `json:"sensorType" bson:"sensorType"`
+	Exploitation    string `json:"exploitation" bson:"exploitation"`
+	CommunicationID string `json:"communicationID" bson:"communicationID"`
 }
 
 type ByGSExploitation []GroundSystemExploitation
@@ -25,13 +25,13 @@ func (c ByGSExploitation) Less(i, j int) bool {
 func (c ByGSExploitation) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
 type GroundSystem struct {
-	ID            string                     `json:"id"`
-	Enclaves      []string                   `json:"enclaves"`
-	ShowOnGEOINT  bool                       `json:"showOnGEOINT"`
-	ShowOnGSEG    bool                       `json:"showOnGSEG"`
-	ShowOnMIST    bool                       `json:"showOnMIST"`
-	ShowOnXINT    bool                       `json:"showOnXINT"`
-	Exploitations []GroundSystemExploitation `json:"exploitations"`
+	ID            string                     `json:"id" bson:"id"`
+	Enclaves      []string                   `json:"enclaves" bson:"enclaves"`
+	ShowOnGEOINT  bool                       `json:"showOnGEOINT" bson:"showOnGEOINT"`
+	ShowOnGSEG    bool                       `json:"showOnGSEG" bson:"showOnGSEG"`
+	ShowOnMIST    bool                       `json:"showOnMIST" bson:"showOnMIST"`
+	ShowOnXINT    bool                       `json:"showOnXINT" bson:"showOnXINT"`
+	Exploitations []GroundSystemExploitation `json:"exploitations" bson:"exploitations"`
 }
 
 type ByGroundSystem []GroundSystem
