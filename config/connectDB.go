@@ -18,8 +18,9 @@ func ConnectDB() *mongo.Client {
 	host := Config("MONGO_HOST")
 	port := Config("MONGO_PORT")
 	uri := Config("MONGO_URI")
+	prefix := Config("MONGO_PREFIX")
 	if user != "" {
-		uri = fmt.Sprintf("mongodb://%s:%s@%s:%s", user, passwd, host, port)
+		uri = fmt.Sprintf("mongodb://%s:%s@%s:%s/?%s", user, passwd, host, port, prefix)
 	}
 	log.Println(uri)
 	client, err := mongo.NewClient(options.Client().ApplyURI(uri))
