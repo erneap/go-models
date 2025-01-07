@@ -20,11 +20,11 @@ func (s *SmtpServer) Address() string {
 }
 
 func (s *SmtpServer) Send(to []string, subject, body string) error {
-	subj := "Subject: " + subject + "\n"
-	mime := "MIME-version: 1.0;\nContent-Type: text/plain;charset=\"UTF-8\";\n\n"
-	toLine := "To: " + strings.Join(to, ",") + "\r\n"
 
-	message := []byte(toLine + subj + mime + "\n" + body)
+	toLine := strings.Join(to, ",")
+	message := []byte("To: " + toLine + "\r\n" +
+		"Subject: " + subject + "\r\n" +
+		"\r\n" + body + "\r\n")
 
 	auth := smtp.PlainAuth("", s.From, s.Password, s.Host)
 
