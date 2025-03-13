@@ -1068,6 +1068,70 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 		sort.Sort(employees.ByLeaveDay(emp.Leaves))
 		std := emp.GetStandardWorkday(time.Date(lr.Year, 1, 1, 0, 0, 0, 0, time.UTC))
 
+		// create employee holiday list and other leave list (array)
+		var empHolidays []employees.LeaveDay
+		var empOtherLeave []employees.LeaveDay
+
+		for _, lv := range emp.Leaves {
+			lv.Used = false
+			if strings.ToLower(lv.Code) == "h" {
+				empHolidays = append(empHolidays, lv)
+			} else {
+				empOtherLeave = append(empOtherLeave, lv)
+			}
+		}
+
+		// process employee holidays first,
+		// 1.  put a holiday is the appropriate company holiday if the holiday is within 7 days
+		// plus or minus
+		for h, lv := range empHolidays {
+			for c, cHol := range lr.Holidays {
+				if strings.ToLower(cHol.Holiday.ID) == "h" &&
+					lv.LeaveDate.Compare(cHol.Holiday.GetActual(lr.Year).AddDate(0, 0, -7)) > 0 &&
+					lv.LeaveDate.Compare(cHol.Holiday.GetActual(lr.Year).AddDate(0, 0, 7)) < 0 &&
+					len(cHol.Periods) == 0 {
+					prd := LeavePeriod{
+						Code:      lv.Code,
+						StartDate: lv.LeaveDate,
+						EndDate:   lv.LeaveDate,
+						Status:    lv.Status,
+					}
+					prd.Leaves = append(prd.Leaves, lv)
+					cHol.Periods = append(cHol.Periods, prd)
+					lr.Holidays[c] = cHol
+					lv.Used = true
+					empHolidays[h] = lv
+				}
+			}
+		}
+
+		// 2.  second pass: check for float holiday and put first non-used employee
+		// holiday in it.
+		for c := 0; c < len(lr.Holidays); c++ {
+			cHol := lr.Holidays[c]
+			if strings.ToLower(cHol.Holiday.ID) == "f" &&
+				len(cHol.Periods) == 0 {
+				bFound := false
+				for h := 0; h < len(empHolidays) && !bFound; h++ {
+					lv := empHolidays[h]
+					if !lv.Used {
+						prd := LeavePeriod{
+							Code:      lv.Code,
+							StartDate: lv.LeaveDate,
+							EndDate:   lv.LeaveDate,
+							Status:    lv.Status,
+						}
+						prd.Leaves = append(prd.Leaves, lv)
+						cHol.Periods = append(cHol.Periods, prd)
+						lr.Holidays[c] = cHol
+						lv.Used = true
+						empHolidays[h] = lv
+						bFound = true
+					}
+				}
+			}
+		}
+		// 3.  put remaining holidays in unused company holidays up to 8 hours per holiday.
 		for _, lv := range emp.Leaves {
 			if lv.LeaveDate.UTC().Year() == lr.Year &&
 				(lv.LeaveDate.Equal(startAsgmt.StartDate) ||
