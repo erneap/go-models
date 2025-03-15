@@ -1074,10 +1074,14 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 
 		for _, lv := range emp.Leaves {
 			lv.Used = false
-			if strings.ToLower(lv.Code) == "h" {
-				empHolidays = append(empHolidays, lv)
-			} else {
-				empOtherLeave = append(empOtherLeave, lv)
+			if lv.LeaveDate.UTC().Year() == lr.Year &&
+				!lv.LeaveDate.Before(startAsgmt.StartDate) &&
+				!lv.LeaveDate.After(endAsgmt.EndDate) {
+				if strings.ToLower(lv.Code) == "h" {
+					empHolidays = append(empHolidays, lv)
+				} else {
+					empOtherLeave = append(empOtherLeave, lv)
+				}
 			}
 		}
 
@@ -1132,65 +1136,58 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 			}
 		}
 		// 3.  put remaining holidays in unused company holidays up to 8 hours per holiday.
-		for _, lv := range emp.Leaves {
-			if lv.LeaveDate.UTC().Year() == lr.Year &&
-				(lv.LeaveDate.Equal(startAsgmt.StartDate) ||
-					lv.LeaveDate.After(startAsgmt.StartDate)) &&
-				(lv.LeaveDate.Equal(endAsgmt.EndDate) ||
-					lv.LeaveDate.Before(endAsgmt.EndDate)) {
-				if strings.EqualFold(lv.Code, "H") {
+		for _, eHol := range empHolidays {
+			bFound := eHol.Used
+			for c, cHol := range lr.Holidays {
+				if !bFound {
+					if cHol.GetHours() < 8.0 && !cHol.Disable {
+						if cHol.GetHours()+eHol.Hours <= 8.0 {
+							bFound = true
+							prd := LeavePeriod{
+								Code:      eHol.Code,
+								StartDate: eHol.LeaveDate,
+								EndDate:   eHol.LeaveDate,
+								Status:    eHol.Status,
+							}
+							prd.Leaves = append(prd.Leaves, eHol)
+							cHol.Periods = append(cHol.Periods, prd)
+							lr.Holidays[c] = cHol
+						}
+					}
+				}
+			}
+		}
+		for _, lv := range empOtherLeave {
+			for m, month := range months {
+				if lv.LeaveDate.Hour() != 0 {
+					delta := time.Hour * time.Duration(lr.Offset)
+					lv.LeaveDate = lv.LeaveDate.Add(delta)
+				}
+				if month.Month.Year() == lv.LeaveDate.Year() &&
+					month.Month.Month() == lv.LeaveDate.Month() {
 					bFound := false
-					for h, hol := range lr.Holidays {
-						if !bFound {
-							if hol.GetHours() < 8.0 && !hol.Disable {
-								if hol.GetHours()+lv.Hours <= 8.0 {
-									bFound = true
-									prd := LeavePeriod{
-										Code:      lv.Code,
-										StartDate: lv.LeaveDate,
-										EndDate:   lv.LeaveDate,
-										Status:    lv.Status,
-									}
-									prd.Leaves = append(prd.Leaves, lv)
-									hol.Periods = append(hol.Periods, prd)
-									lr.Holidays[h] = hol
-								}
-							}
+					for p, prd := range month.Periods {
+						if strings.EqualFold(prd.Code, lv.Code) &&
+							strings.EqualFold(prd.Status, lv.Status) &&
+							prd.EndDate.Day()+1 == lv.LeaveDate.Day() &&
+							!bFound && lv.Hours >= std && prd.GetHours() >= std {
+							bFound = true
+							prd.Leaves = append(prd.Leaves, lv)
+							prd.EndDate = lv.LeaveDate
+							month.Periods[p] = prd
 						}
 					}
-				} else {
-					for m, month := range months {
-						if lv.LeaveDate.Hour() != 0 {
-							delta := time.Hour * time.Duration(lr.Offset)
-							lv.LeaveDate = lv.LeaveDate.Add(delta)
+					if !bFound {
+						prd := LeavePeriod{
+							Code:      lv.Code,
+							StartDate: lv.LeaveDate,
+							EndDate:   lv.LeaveDate,
+							Status:    lv.Status,
 						}
-						if month.Month.Year() == lv.LeaveDate.Year() &&
-							month.Month.Month() == lv.LeaveDate.Month() {
-							bFound := false
-							for p, prd := range month.Periods {
-								if strings.EqualFold(prd.Code, lv.Code) &&
-									strings.EqualFold(prd.Status, lv.Status) &&
-									prd.EndDate.Day()+1 == lv.LeaveDate.Day() &&
-									!bFound && lv.Hours >= std && prd.GetHours() >= std {
-									bFound = true
-									prd.Leaves = append(prd.Leaves, lv)
-									prd.EndDate = lv.LeaveDate
-									month.Periods[p] = prd
-								}
-							}
-							if !bFound {
-								prd := LeavePeriod{
-									Code:      lv.Code,
-									StartDate: lv.LeaveDate,
-									EndDate:   lv.LeaveDate,
-									Status:    lv.Status,
-								}
-								prd.Leaves = append(prd.Leaves, lv)
-								month.Periods = append(month.Periods, prd)
-							}
-							months[m] = month
-						}
+						prd.Leaves = append(prd.Leaves, lv)
+						month.Periods = append(month.Periods, prd)
 					}
+					months[m] = month
 				}
 			}
 		}
