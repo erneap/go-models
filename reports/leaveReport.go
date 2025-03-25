@@ -1111,9 +1111,8 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 		for c := 0; c < len(lr.Holidays); c++ {
 			cHol := lr.Holidays[c]
 			start := cHol.Holiday.GetActual(lr.Year)
-			end := start.AddDate(0, 0, 1)
-			if strings.ToLower(cHol.Holiday.ID) == "f" &&
-				len(cHol.Periods) == 0 {
+			if len(cHol.Periods) == 0 && start != nil {
+				end := start.AddDate(0, 0, 1)
 				bFound := false
 				for h := 0; h < len(empHolidays) && !bFound; h++ {
 					lv := empHolidays[h]
