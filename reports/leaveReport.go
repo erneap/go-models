@@ -1086,14 +1086,11 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 		}
 
 		// process employee holidays first,
-		// 1.  put a holiday is the appropriate company holiday if the holiday is within 7 days
-		// plus or minus
+		// 1.  Actuals displayed first
 		for h, lv := range empHolidays {
 			for c, cHol := range lr.Holidays {
 				if strings.ToLower(cHol.Holiday.ID) == "h" &&
-					lv.LeaveDate.Compare(cHol.Holiday.GetActual(lr.Year).AddDate(0, 0, -7)) > 0 &&
-					lv.LeaveDate.Compare(cHol.Holiday.GetActual(lr.Year).AddDate(0, 0, 7)) < 0 &&
-					len(cHol.Periods) == 0 {
+					strings.ToLower(lv.Status) == "actual" {
 					prd := LeavePeriod{
 						Code:      lv.Code,
 						StartDate: lv.LeaveDate,
@@ -1109,16 +1106,19 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 			}
 		}
 
-		// 2.  second pass: check for float holiday and put first non-used employee
-		// holiday in it.
+		// 2.  loop through holidays and add leave to period if equal to the
+		// reference date
 		for c := 0; c < len(lr.Holidays); c++ {
 			cHol := lr.Holidays[c]
+			start := cHol.Holiday.GetActual(lr.Year)
+			end := start.AddDate(0, 0, 1)
 			if strings.ToLower(cHol.Holiday.ID) == "f" &&
 				len(cHol.Periods) == 0 {
 				bFound := false
 				for h := 0; h < len(empHolidays) && !bFound; h++ {
 					lv := empHolidays[h]
-					if !lv.Used {
+					if !lv.Used && lv.LeaveDate.Compare(*start) >= 0 &&
+						lv.LeaveDate.Compare(end) < 0 {
 						prd := LeavePeriod{
 							Code:      lv.Code,
 							StartDate: lv.LeaveDate,
