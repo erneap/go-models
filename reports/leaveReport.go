@@ -1091,7 +1091,7 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 			for c, cHol := range lr.Holidays {
 				if strings.ToLower(cHol.Holiday.ID) == "h" &&
 					strings.ToLower(lv.Status) == "actual" &&
-					!lv.Used {
+					!lv.Used && cHol.GetHolidayHours()+lv.Hours <= 8.0 {
 					prd := LeavePeriod{
 						Code:      lv.Code,
 						StartDate: lv.LeaveDate,
