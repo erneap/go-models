@@ -155,7 +155,7 @@ func (cr *ReportCofS) CreateCofSXMLSections(rpt *sites.CofSReport) error {
 					}
 					count++
 					empString := cr.CreateEmployeeData(count, c+1, emp,
-						laborCodes, sect.CompanyID, false)
+						laborCodes, sect.CompanyID, false, rpt.StartDate, rpt.EndDate)
 					sb.WriteString(empString)
 				}
 			}
@@ -187,7 +187,7 @@ func (cr *ReportCofS) CreateCofSXMLSections(rpt *sites.CofSReport) error {
 
 func (cr *ReportCofS) CreateEmployeeData(count, coCount int,
 	emp employees.Employee, labor []employees.EmployeeLaborCode,
-	company string, bExercise bool) string {
+	company string, bExercise bool, start, end time.Time) string {
 	var esb strings.Builder
 	total := 0.0
 	label := fmt.Sprintf("NameRow%d", count)
@@ -210,35 +210,39 @@ func (cr *ReportCofS) CreateEmployeeData(count, coCount int,
 		hours := 0.0
 		label := fmt.Sprintf("Section%dRow%d_%02d", coCount,
 			count, current.Day())
-		for _, lc := range labor {
-			hours += emp.GetWorkedHoursForLabor(lc.ChargeNumber,
-				lc.Extension, current, current.AddDate(0, 0, 1))
-		}
-		if hours > 0.0 {
-			iHours := int(math.Floor(hours * 10))
-			icHours := int(math.Floor(hours) * 10)
-			hours = (math.Floor(hours * 100)) / 100.0
-			total += hours
-			if icHours == iHours {
-				esb.WriteString(fmt.Sprintf("<%s>%.0f</%s>", label,
-					hours, label))
-			} else {
-				esb.WriteString(fmt.Sprintf("<%s>%.1f</%s>", label,
-					hours, label))
+		if !(current.Before(start) || current.After(end)) {
+			for _, lc := range labor {
+				hours += emp.GetWorkedHoursForLabor(lc.ChargeNumber,
+					lc.Extension, current, current.AddDate(0, 0, 1))
 			}
-			if hours > 12.0 {
-				remark := fmt.Sprintf("%s: %s %s received a safety briefing for "+
-					"working over 12 hours on %s.",
-					strings.ToUpper(company), emp.Name.FirstName, emp.Name.LastName,
-					current.Format("02 January"))
-				cr.Remarks = append(cr.Remarks, remark)
-			}
-		} else if !bExercise {
-			wd := emp.GetWorkdayActual(current, labor)
-			if wd != nil && wd.Code != "" {
-				if wc, ok := cr.LeaveCodes[wd.Code]; ok && wc.AltCode != "" {
-					esb.WriteString(fmt.Sprintf("<%s>%s</%s>", label,
-						wc.AltCode, label))
+			if hours > 0.0 {
+				iHours := int(math.Floor(hours * 10))
+				icHours := int(math.Floor(hours) * 10)
+				hours = (math.Floor(hours * 100)) / 100.0
+				total += hours
+				if icHours == iHours {
+					esb.WriteString(fmt.Sprintf("<%s>%.0f</%s>", label,
+						hours, label))
+				} else {
+					esb.WriteString(fmt.Sprintf("<%s>%.1f</%s>", label,
+						hours, label))
+				}
+				if hours > 12.0 {
+					remark := fmt.Sprintf("%s: %s %s received a safety briefing for "+
+						"working over 12 hours on %s.",
+						strings.ToUpper(company), emp.Name.FirstName, emp.Name.LastName,
+						current.Format("02 January"))
+					cr.Remarks = append(cr.Remarks, remark)
+				}
+			} else if !bExercise {
+				wd := emp.GetWorkdayActual(current, labor)
+				if wd != nil && wd.Code != "" {
+					if wc, ok := cr.LeaveCodes[wd.Code]; ok && wc.AltCode != "" {
+						esb.WriteString(fmt.Sprintf("<%s>%s</%s>", label,
+							wc.AltCode, label))
+					} else {
+						esb.WriteString(fmt.Sprintf("<%s/>", label))
+					}
 				} else {
 					esb.WriteString(fmt.Sprintf("<%s/>", label))
 				}
