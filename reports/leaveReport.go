@@ -1137,7 +1137,7 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 			}
 		}
 		// 3.  put remaining holidays in unused company holidays up to 8 hours per holiday.
-		for _, eHol := range empHolidays {
+		for e, eHol := range empHolidays {
 			bFound := eHol.Used
 			for c, cHol := range lr.Holidays {
 				if !bFound && !cHol.Disable {
@@ -1153,6 +1153,8 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 							prd.Leaves = append(prd.Leaves, eHol)
 							cHol.Periods = append(cHol.Periods, prd)
 							lr.Holidays[c] = cHol
+							eHol.Used = true
+							empHolidays[e] = eHol
 						}
 					}
 				}
