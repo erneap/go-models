@@ -1091,7 +1091,7 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 			for c, cHol := range lr.Holidays {
 				if strings.ToLower(cHol.Holiday.ID) == "h" &&
 					strings.ToLower(lv.Status) == "actual" &&
-					!lv.Used &&
+					!lv.Used && !cHol.Disable &&
 					cHol.GetHolidayHours()+lv.Hours <= 8.0 {
 					prd := LeavePeriod{
 						Code:      lv.Code,
@@ -1119,7 +1119,7 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 				for h := 0; h < len(empHolidays) && !bFound; h++ {
 					lv := empHolidays[h]
 					if !lv.Used && lv.LeaveDate.Compare(*start) >= 0 &&
-						lv.LeaveDate.Compare(end) < 0 {
+						lv.LeaveDate.Compare(end) < 0 && !cHol.Disable {
 						prd := LeavePeriod{
 							Code:      lv.Code,
 							StartDate: lv.LeaveDate,
@@ -1140,8 +1140,8 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 		for _, eHol := range empHolidays {
 			bFound := eHol.Used
 			for c, cHol := range lr.Holidays {
-				if !bFound {
-					if cHol.GetHours() < 8.0 && !cHol.Disable {
+				if !bFound && !cHol.Disable {
+					if cHol.GetHours() < 8.0 {
 						if cHol.GetHours()+eHol.Hours <= 8.0 {
 							bFound = true
 							prd := LeavePeriod{
@@ -1158,6 +1158,29 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 				}
 			}
 		}
+
+		// 4.  if there are unused holidays, plug into any disabled holidays
+		for _, eHol := range empHolidays {
+			if !eHol.Used {
+				bFound := false
+				for c := 0; c < len(lr.Holidays) && !bFound; c++ {
+					cHol := lr.Holidays[c]
+					if cHol.Disable {
+						bFound = true
+						prd := LeavePeriod{
+							Code:      eHol.Code,
+							StartDate: eHol.LeaveDate,
+							EndDate:   eHol.LeaveDate,
+							Status:    eHol.Status,
+						}
+						prd.Leaves = append(prd.Leaves, eHol)
+						cHol.Periods = append(cHol.Periods, prd)
+						lr.Holidays[c] = cHol
+					}
+				}
+			}
+		}
+
 		for _, lv := range empOtherLeave {
 			for m, month := range months {
 				if lv.LeaveDate.Hour() != 0 {
