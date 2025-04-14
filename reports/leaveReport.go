@@ -1086,7 +1086,30 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 		}
 
 		// process employee holidays first,
-		// 1.  Actuals displayed first
+		// 1.  Place the tagged leaves to the proper holiday
+		for h, lv := range empHolidays {
+			if lv.TagDay != "" && !lv.Used {
+				for c, cHol := range lr.Holidays {
+					cHolID := cHol.Holiday.ID + strconv.Itoa(int(cHol.Holiday.SortID))
+					if strings.EqualFold(cHolID, lv.TagDay) &&
+						!cHol.Disable && cHol.GetHolidayHours()+lv.Hours <= 8.0 {
+						prd := LeavePeriod{
+							Code:      lv.Code,
+							StartDate: lv.LeaveDate,
+							EndDate:   lv.LeaveDate,
+							Status:    lv.Status,
+						}
+						prd.Leaves = append(prd.Leaves, lv)
+						cHol.Periods = append(cHol.Periods, prd)
+						lr.Holidays[c] = cHol
+						lv.Used = true
+						empHolidays[h] = lv
+					}
+				}
+			}
+		}
+
+		// 2.  Actuals displayed first
 		for h, lv := range empHolidays {
 			for c, cHol := range lr.Holidays {
 				if strings.ToLower(cHol.Holiday.ID) == "h" &&
@@ -1108,7 +1131,7 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 			}
 		}
 
-		// 2.  loop through holidays and add leave to period if equal to the
+		// 3.  loop through holidays and add leave to period if equal to the
 		// reference date
 		for c := 0; c < len(lr.Holidays); c++ {
 			cHol := lr.Holidays[c]
@@ -1136,7 +1159,7 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 				}
 			}
 		}
-		// 3.  put remaining holidays in unused company holidays up to 8 hours per holiday.
+		// 4.  put remaining holidays in unused company holidays up to 8 hours per holiday.
 		for e, eHol := range empHolidays {
 			bFound := eHol.Used
 			for c, cHol := range lr.Holidays {
@@ -1161,7 +1184,7 @@ func (lr *LeaveReport) CreateLeaveListing() error {
 			}
 		}
 
-		// 4.  if there are unused holidays, plug into any disabled holidays
+		// 5.  if there are unused holidays, plug into any disabled holidays
 		for _, eHol := range empHolidays {
 			if !eHol.Used {
 				bFound := false

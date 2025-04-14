@@ -27,6 +27,7 @@ type LeaveDay struct {
 	Status    string    `json:"status" bson:"status"`
 	RequestID string    `json:"requestid" bson:"requestid"`
 	Used      bool      `json:"-" bson:"-"`
+	TagDay    string    `json:"tagday,omitempty" bson:"tagday,omitempty"`
 }
 
 type ByLeaveDay []LeaveDay
