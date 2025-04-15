@@ -613,6 +613,8 @@ func (e *Employee) UpdateLeave(id int, field, value string) (*LeaveDay, error) {
 				lv.Status = value
 			case "requestid":
 				lv.RequestID = value
+			case "tagday":
+				lv.TagDay = value
 			}
 			e.Leaves[i] = lv
 		}
