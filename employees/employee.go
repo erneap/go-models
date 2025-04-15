@@ -593,6 +593,7 @@ func (e *Employee) UpdateLeave(id int, field, value string) (*LeaveDay, error) {
 				Hours:     lv.Hours,
 				Status:    lv.Status,
 				RequestID: lv.RequestID,
+				TagDay:    lv.TagDay,
 			}
 			switch strings.ToLower(field) {
 			case "date":
