@@ -1,4 +1,4 @@
-package metrics2
+package metrics
 
 import (
 	"time"
@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type GroundOutage2 struct {
+type GroundOutage struct {
 	ID             primitive.ObjectID `json:"id" bson:"_id"`
 	OutageDate     time.Time          `json:"outageDate" bson:"outageDate"`
 	GroundSystem   string             `json:"groundSystem" bson:"groundSystem"`
@@ -22,13 +22,13 @@ type GroundOutage2 struct {
 	Capability     string             `json:"capability,omitempty" bson:"capability,omitempty"`
 }
 
-type ByOutage2 []GroundOutage2
+type ByOutage []GroundOutage
 
-func (c ByOutage2) Len() int { return len(c) }
-func (c ByOutage2) Less(i, j int) bool {
+func (c ByOutage) Len() int { return len(c) }
+func (c ByOutage) Less(i, j int) bool {
 	if c[i].OutageDate.Equal(c[j].OutageDate) {
 		return c[i].OutageNumber < c[j].OutageNumber
 	}
 	return c[i].OutageDate.Before(c[j].OutageDate)
 }
-func (c ByOutage2) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c ByOutage) Swap(i, j int) { c[i], c[j] = c[j], c[i] }

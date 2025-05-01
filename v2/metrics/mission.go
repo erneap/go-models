@@ -1,20 +1,20 @@
-package metrics2
+package metrics
 
 import (
 	"strings"
 	"time"
 
-	"github.com/erneap/go-models/systemdata"
+	"github.com/erneap/go-models/v2/systemdata"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-type MissionSensorOutage2 struct {
+type MissionSensorOutage struct {
 	TotalOutageMinutes     uint `json:"totalOutageMinutes" bson:"totalOutageMinutes"`
 	PartialLBOutageMinutes uint `json:"partialLBOutageMinutes" bson:"partialLBOutageMinutes"`
 	PartialHBOutageMinutes uint `json:"partialHBOutageMinutes" bson:"partialHBOutageMinutes"`
 }
 
-type MissionSensor2 struct {
+type MissionSensor struct {
 	SensorID          string                  `json:"sensorID" bson:"sensorID"`
 	SensorType        systemdata.GeneralTypes `json:"sensorType" bson:"sensorType"`
 	PreflightMinutes  uint                    `json:"preflightMinutes" bson:"preflightMinutes"`
@@ -24,7 +24,7 @@ type MissionSensor2 struct {
 	AdditionalMinutes uint                    `json:"additionalMinutes" bson:"additionalMinutes"`
 	FinalCode         uint                    `json:"finalCode" bson:"finalCode"`
 	KitNumber         string                  `json:"kitNumber" bson:"kitNumber"`
-	SensorOutage      MissionSensorOutage2    `json:"sensorOutage" bson:"sensorOutage"`
+	SensorOutage      MissionSensorOutage     `json:"sensorOutage" bson:"sensorOutage"`
 	GroundOutage      uint                    `json:"groundOutage" bson:"groundOutage"`
 	HasHap            bool                    `json:"hasHap" bson:"hasHap"`
 	TowerID           uint                    `json:"towerID,omitempty" bson:"towerID,omitempty"`
@@ -34,15 +34,15 @@ type MissionSensor2 struct {
 	Images            []systemdata.ImageType  `json:"images" bson:"images"`
 }
 
-type ByMissionSensor2 []MissionSensor2
+type ByMissionSensor []MissionSensor
 
-func (c ByMissionSensor2) Len() int { return len(c) }
-func (c ByMissionSensor2) Less(i, j int) bool {
+func (c ByMissionSensor) Len() int { return len(c) }
+func (c ByMissionSensor) Less(i, j int) bool {
 	return c[i].SortID < c[j].SortID
 }
-func (c ByMissionSensor2) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c ByMissionSensor) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
-func (s *MissionSensor2) EquipmentInUse(sid string) bool {
+func (s *MissionSensor) EquipmentInUse(sid string) bool {
 	answer := false
 	if len(s.CheckedEquipment) > 0 {
 		for _, s := range s.CheckedEquipment {
@@ -56,7 +56,7 @@ func (s *MissionSensor2) EquipmentInUse(sid string) bool {
 	return answer
 }
 
-type Mission2 struct {
+type Mission struct {
 	ID             primitive.ObjectID `json:"id" bson:"_id"`
 	MissionDate    time.Time          `json:"missionDate" bson:"missionDate"`
 	PlatformID     string             `json:"platformID" bson:"platformID"`
@@ -71,13 +71,13 @@ type Mission2 struct {
 	IndefDelay     bool               `json:"indefDelay" bson:"indefDelay"`
 	MissionOverlap uint               `json:"missionOverlap" bson:"missionOverlap"`
 	Comments       string             `json:"comments" bson:"comments"`
-	Sensors        []MissionSensor2   `json:"sensors,omitempty" bson:"sensors,omitempty"`
+	Sensors        []MissionSensor    `json:"sensors,omitempty" bson:"sensors,omitempty"`
 }
 
-type ByMission2 []Mission2
+type ByMission []Mission
 
-func (c ByMission2) Len() int { return len(c) }
-func (c ByMission2) Less(i, j int) bool {
+func (c ByMission) Len() int { return len(c) }
+func (c ByMission) Less(i, j int) bool {
 	if c[i].MissionDate.Equal(c[j].MissionDate) {
 		if strings.EqualFold(c[i].PlatformID, c[j].PlatformID) {
 			return c[i].SortieID < c[j].SortieID
@@ -86,9 +86,9 @@ func (c ByMission2) Less(i, j int) bool {
 	}
 	return c[i].MissionDate.Before(c[j].MissionDate)
 }
-func (c ByMission2) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
+func (c ByMission) Swap(i, j int) { c[i], c[j] = c[j], c[i] }
 
-func (m *Mission2) EquipmentInUse(sid string) bool {
+func (m *Mission) EquipmentInUse(sid string) bool {
 	answer := false
 	if len(m.Sensors) > 0 {
 		for _, s := range m.Sensors {
