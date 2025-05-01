@@ -31,6 +31,7 @@ type GroundSystem struct {
 	ShowOnGSEG    bool                       `json:"showOnGSEG" bson:"showOnGSEG"`
 	ShowOnMIST    bool                       `json:"showOnMIST" bson:"showOnMIST"`
 	ShowOnXINT    bool                       `json:"showOnXINT" bson:"showOnXINT"`
+	CheckForUse   bool                       `json:"checkForUse,omitempty" bson:"checkForUse,omitempty"`
 	Exploitations []GroundSystemExploitation `json:"exploitations" bson:"exploitations"`
 }
 
